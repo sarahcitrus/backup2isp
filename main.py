@@ -1,5 +1,5 @@
 #! /usr/bin/python
-import httplib, urllib, sys, mimetools,re, os, pickle, time, socket, hashlib, ConfigParser
+import httplib, urllib, sys, mimetools,re, os, pickle, time, socket, hashlib, ConfigParser, getopt
 
 # setup paths
 global tokenexpiry, workstation_id, workstation_name
@@ -249,7 +249,7 @@ def addBackup( name ):
 					       { "session_name" : "user",
 					       "notification" : 1 } ) )
 
-def uploadMultipleFiles ( localpath, remotepath ):
+def uploadMultipleFiles ( localpath, remotepath="/" ):
   for root, dirs, files in os.walk(localpath):
    for name in files:
        destdir = remotepath + root.replace( localpath, "" )
@@ -323,7 +323,8 @@ def deleteFileByPath ( filepath, path="/" ):
     return False
   fileids = []
   for filedetail in files:
-    if filedetail[1] in filepath or filepath[0] == "*":
+    
+    if not filedetail[0].find("INVALID_FOLDER") and filedetail[1] in filepath or filepath[0] == "*":
       fileids.append( filedetail[6] )
   if len( fileids ) > 0:
     return deleteFiles( fileids )
@@ -361,22 +362,45 @@ def listFiles ( path="/" ):
     details.append( line.split("|") )
   return details
 
-print "Logging in"
+if __name__ == '__main__':
+    import getopt
+    
+    opts, args = getopt.getopt(sys.argv[1:], "help")
+    if len(args) == 0:
+      print "Use one of these commands: upload"
+      sys.exit(2)
+      
+    if args[0] == "upload":
+      if len(args) < 2:
+	print "You must supply a path to upload"
+	sys.exit(2)
+      else:
+	if not os.path.exists( args[1] ):
+	  print "File does not exist"
+	  sys.exit(2)
+	else:
+	  if os.path.isdir(args[1]):
+	    print uploadMultipleFiles(args[1])
+	  else:
+	    print uploadFile(args[1])
+	  sys.exit(0)
+    
+    print "Logging in"
 
-token = authenticate( username, password, backupName)
-if token == None:
-  print "Login failed"
-  sys.exit(1)
-print "Auth expires ", time.ctime(tokenexpiry)
+    token = authenticate( username, password, backupName)
+    if token == None:
+      print "Login failed"
+      sys.exit(1)
+    print "Auth expires ", time.ctime(tokenexpiry)
 
-if not quickConnect:
-  # again, gives us info we dont care about, but if not on quick mode dont do it
-  listBackups()
-  doTicket("VIEWCONFIGURATION")
+    if not quickConnect:
+      # again, gives us info we dont care about, but if not on quick mode dont do it
+      listBackups()
+      doTicket("VIEWCONFIGURATION")
 
 
-#print doTicket("LIST")
-#print listBackup()
-#print uploadMultipleFiles("/mnt/sata4/Completed/Paris/test1", "/Pictures/testdir2")
-#print deleteFileByPath( ["test2"], "/Pictures/Paris" )
-doTicket("GETTIMESTAMP");
+    #print doTicket("LIST")
+    #print listBackup()
+    #print uploadMultipleFiles("/mnt/sata4/Completed/Paris/test1", "/Pictures/testdir2")
+    #print deleteFileByPath( ["test2"], "/Pictures/Paris" )
+    doTicket("GETTIMESTAMP");
