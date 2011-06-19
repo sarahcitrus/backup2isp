@@ -1,20 +1,53 @@
 #! /usr/bin/python
-import httplib, urllib, sys, mimetools,re, os, pickle, time, socket, hashlib
+import httplib, urllib, sys, mimetools,re, os, pickle, time, socket, hashlib, ConfigParser
 
+# setup paths
 global tokenexpiry, workstation_id, workstation_name
 quickConnect = 1
 backupName = "testbackup"
 configdir = ".backup2isp"
 tokenfilename = "token"
+configpath = os.path.join(os.getenv("HOME"), configdir)
+configfile = os.path.join( configpath, "config" )
+
+if not os.path.exists( configpath ):
+  os.mkdir( configpath )
+
+config = ConfigParser.ConfigParser()
+
+if not os.path.exists( configfile ):
+  # config file doesnt exist, create one with default options, have user fill in blanks
+  config.add_section('Version')
+  config.set("Version", "version", 1 )
+  
+  config.add_section('Server')
+  config.set('Server', 'useragent', 'AGBackup-VirginMedia-en_EN-v2.3.1.31082-AGBK_VIRGIN_W-Backup n Storage-WIN_Seven-?-DG')
+  config.set('Server', 'server', 'cl-virgin.ob.f-secure.com')
+  config.set('Server', 'dac', 'AGD44cdx56rtt7u8')
+  #config.set('Server', 'provider', raw_input('Your provider [ virgin, steek, f-secure ]:') # only support virgin currently
+  config.set('Server', 'provider', 'virgin')
+  config.set('Server', 'username', raw_input('Your username:'))
+  config.set('Server', 'password', raw_input('Your password:'))
+  
+  
+  # Writing our configuration file to 'example.cfg'
+  with open(configfile, 'wb') as configdetail:
+      config.write(configdetail)
+else:
+  config.readfp( open(configfile) )
+
+useragent = config.get('Server', 'useragent')
+server = config.get('Server', 'server')
+dac = config.get('Server', 'dac')
+provider = config.get('Server', 'provider')
+username = config.get('Server', 'username')
+password = config.get('Server', 'password')
+
+tokenfile = os.path.join(configpath, tokenfilename)
+
 
 workstation_name = socket.gethostname()
 workstation_id = hashlib.md5(workstation_name).hexdigest()
-
-
-if not os.path.exists( os.path.join(os.getenv("HOME"), configdir) ):
-  os.mkdir( os.path.join(os.getenv("HOME"), configdir) )
-
-tokenfile = os.path.join(os.getenv("HOME"), configdir, tokenfilename)
 
 tokenexpiry = 0
 
@@ -126,7 +159,7 @@ def doTicket( command , param=None ):
   dacform = { 'name': 'DUNGEONDEVICE', 'data': dac }
   ticketform = { 'name': 'DUNGEONTICKET', 'data': token }
   if param == None:
-    requestform = { 'name': 'AYMARA', 'data' : "AG\x05\bcommand=" + command + "#;" }
+    requestform = { 'name': 'AYMARA', 'data' : "AG\x05\x06command=" + command + "#;" }
   else:
     requestform = { 'name': 'AYMARA', 'data' : "AG\x05\x06command=" + command + "#" + param + ";" }
     
@@ -346,4 +379,4 @@ if not quickConnect:
 #print listBackup()
 #print uploadMultipleFiles("/mnt/sata4/Completed/Paris/test1", "/Pictures/testdir2")
 #print deleteFileByPath( ["test2"], "/Pictures/Paris" )
-#doTicket("GETTIMESTAMP");
+doTicket("GETTIMESTAMP");
