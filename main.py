@@ -252,7 +252,8 @@ def addBackup( name ):
 def uploadMultipleFiles ( localpath, remotepath="/" ):
   for root, dirs, files in os.walk(localpath):
    for name in files:
-       destdir = remotepath + root.replace( localpath, "" )
+       remotedest = root.replace( localpath, "" )
+       destdir = (remotepath + remotedest).replace("//", "/")
        
        print "Uploading", os.path.join(root, name), "to", destdir
        uploadFile( os.path.join(root, name), destdir )
@@ -379,10 +380,9 @@ if __name__ == '__main__':
 	  print "File does not exist"
 	  sys.exit(2)
 	else:
-	  if os.path.isdir(args[1]):
-	    print uploadMultipleFiles(args[1])
-	  else:
-	    print uploadFile(args[1])
+	  if 2 not in args:
+	    args.append("/")
+	  uploadMultipleFiles(args[1], args[2])
 	  sys.exit(0)
     
     print "Logging in"
@@ -401,6 +401,6 @@ if __name__ == '__main__':
 
     #print doTicket("LIST")
     #print listBackup()
-    #print uploadMultipleFiles("/mnt/sata4/Completed/Paris/test1", "/Pictures/testdir2")
-    #print deleteFileByPath( ["test2"], "/Pictures/Paris" )
+    #print uploadMultipleFiles("/local/files", "/Pictures/test123")
+    #print deleteFileByPath( ["test2"], "/Pictures/test12" )
     doTicket("GETTIMESTAMP");
