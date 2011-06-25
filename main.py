@@ -181,8 +181,8 @@ if not quickConnect:
 
   # ping, again its pointless, but real client does this, so we will too
   ping()
-else:
-  print "Quick connecting, skipping useless stuff"
+#else:
+#  print "Quick connecting, skipping useless stuff"
   
 
 def parseMeta( metadata ):
@@ -312,8 +312,8 @@ def deleteFiles ( ids ):
       details += "|"
     else:
       first = False
-    details += str(len(str(id))) + "|" + str(id)
-    detail2 += "1|F|"
+    details += str(len(str(id[6]))) + "|" + str(id[6])
+    detail2 += "1|"+ id[0] + "|"
   fullcommand = details + detail2 + '#'
   return doTicket("DELETE", fullcommand)
 
@@ -321,15 +321,18 @@ def deleteFileByPath ( filepath, path="/" ):
   files = listFiles(path)
   # no files, abort
   if len(files) <= 0:
+    print "No files in path"
     return False
   fileids = []
   for filedetail in files:
-    
-    if not filedetail[0].find("INVALID_FOLDER") and filedetail[1] in filepath or filepath[0] == "*":
-      fileids.append( filedetail[6] )
+    if ( filedetail[0].find("INVALID_FOLDER") == -1 ) and ( filedetail[1] in filepath ) or ( filepath[0] == "*" ):
+      fileids.append( filedetail )
+      if filedetail[0] == "D":
+	deleteFileByPath("*"  , filedetail )
   if len( fileids ) > 0:
     return deleteFiles( fileids )
   else:
+    print "Nothing matching name to delete"
     return False
   
 def listFiles ( path="/" ):
@@ -368,7 +371,7 @@ if __name__ == '__main__':
     
     opts, args = getopt.getopt(sys.argv[1:], "help")
     if len(args) == 0:
-      print "Use one of these commands: upload"
+      print "Use one of these commands: upload delete"
       sys.exit(2)
       
     if args[0] == "upload":
@@ -380,27 +383,41 @@ if __name__ == '__main__':
 	  print "File does not exist"
 	  sys.exit(2)
 	else:
-	  if 2 not in args:
+	  if len(args) > 1:
 	    args.append("/")
 	  uploadMultipleFiles(args[1], args[2])
 	  sys.exit(0)
     
-    print "Logging in"
+    if args[0] == "delete":
+      deleteFileByPath( [args[1]], "/" )
+      
+    if args[0] == "list":
+      path = "/"
+      if len(args) > 1:
+	path = args[1]
+      files = listFiles(path)
+      for file in files:
+	if len(file) == 1:
+	  print file
+	else: 
+	  print file[1], " - ", file[0]
+    
+    #print "Logging in"
 
-    token = authenticate( username, password, backupName)
-    if token == None:
-      print "Login failed"
-      sys.exit(1)
-    print "Auth expires ", time.ctime(tokenexpiry)
+    #token = authenticate( username, password, backupName)
+    #if token == None:
+    #  print "Login failed"
+    #  sys.exit(1)
+    #print "Auth expires ", time.ctime(tokenexpiry)
 
-    if not quickConnect:
+    #if not quickConnect:
       # again, gives us info we dont care about, but if not on quick mode dont do it
-      listBackups()
-      doTicket("VIEWCONFIGURATION")
+      #listBackups()
+      #doTicket("VIEWCONFIGURATION")
 
 
     #print doTicket("LIST")
     #print listBackup()
     #print uploadMultipleFiles("/local/files", "/Pictures/test123")
     #print deleteFileByPath( ["test2"], "/Pictures/test12" )
-    doTicket("GETTIMESTAMP");
+    #doTicket("GETTIMESTAMP");
