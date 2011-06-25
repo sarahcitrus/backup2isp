@@ -172,7 +172,7 @@ def doTicket( command , param=None ):
   headers = {"User-Agent": useragent, "Content-Type" : contenttype, "Accept" : "*/*"}
   connection.request("POST", "/gate/dungeongate.php", formdata, headers)
   response = connection.getresponse()
-  print  response.read()
+  response.read()
   return parseMeta(response.read())
 
 if not quickConnect:
@@ -250,14 +250,17 @@ def addBackup( name ):
 					       "notification" : 1 } ) )
 
 def uploadMultipleFiles ( localpath, remotepath="/" ):
-  for root, dirs, files in os.walk(localpath):
-   for name in files:
-       remotedest = root.replace( localpath, "" )
-       destdir = (remotepath + remotedest).replace("//", "/")
-       
-       print "Uploading", os.path.join(root, name), "to", destdir
-       uploadFile( os.path.join(root, name), destdir )
-       print "Done"
+  if os.path.isfile(localpath):
+    uploadFile( localpath, remotepath )
+  else:
+    for root, dirs, files in os.walk(localpath):
+      for name in files:
+	  remotedest = root.replace( localpath, "" )
+	  destdir = (remotepath + remotedest).replace("//", "/")
+	  
+	  print "Uploading", os.path.join(root, name), "to", destdir
+	  uploadFile( os.path.join(root, name), destdir )
+	  print "Done"
   return True
 
 def uploadFile ( filepath, path="/" ) :
@@ -298,8 +301,10 @@ def uploadFile ( filepath, path="/" ) :
   
   #connection.set_debuglevel(9)
   headers = {"User-Agent": useragent, "Content-Type" : contenttype, "Accept" : "*/*"}
+  print "Uploading" , filepath, "to", path
   connection.request("POST", "/gate/dungeongate.php", formdata, headers)
   response = connection.getresponse()
+  print "Uploaded" , filepath, "to", path
   filehandle.close()
   return response.read()
 
@@ -320,6 +325,7 @@ def deleteFiles ( ids ):
   return doTicket("DELETE", fullcommand)
 
 def deleteFileByPath ( filepath, path="/" ):
+  print "Deleting ", filepath, "from", path
   files = listFiles(path)
   # no files, abort
   if len(files) <= 0:
@@ -396,8 +402,9 @@ if __name__ == '__main__':
       filename = args[1]
       if len(args) == 3:
 	path = args[2]
-      
       path = os.path.dirname(filename)
+      if len(path) == 0:
+	path = "/"
       filename = os.path.basename(filename)
       deleteFileByPath( filename, path )
       
