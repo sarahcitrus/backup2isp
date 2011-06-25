@@ -313,7 +313,7 @@ def deleteFiles ( ids ):
     else:
       first = False
     details += str(len(str(id[6]))) + "|" + str(id[6])
-    detail2 += "1|"+ id[0] + "|"
+    detail2 += str(len(id[0])) + "|"+ id[0] + "|"
   fullcommand = details + detail2 + '#'
   return doTicket("DELETE", fullcommand)
 
@@ -325,10 +325,11 @@ def deleteFileByPath ( filepath, path="/" ):
     return False
   fileids = []
   for filedetail in files:
-    if ( filedetail[0].find("INVALID_FOLDER") == -1 ) and ( filedetail[1] in filepath ) or ( filepath[0] == "*" ):
-      fileids.append( filedetail )
-      if filedetail[0] == "D":
-	deleteFileByPath("*"  , filedetail )
+    if len(filedetail) > 1:
+      if ( filedetail[0].find("INVALID_FOLDER") == -1 ) and ( filedetail[1] in filepath ) or ( filepath[0] == "*" ):
+	fileids.append( filedetail )
+	if filedetail[0] == "D":
+	  deleteFileByPath("*"  , path + "/" + filedetail[1] )
   if len( fileids ) > 0:
     return deleteFiles( fileids )
   else:
@@ -389,7 +390,14 @@ if __name__ == '__main__':
 	  sys.exit(0)
     
     if args[0] == "delete":
-      deleteFileByPath( [args[1]], "/" )
+      path = "/"
+      filename = args[1]
+      if len(args) == 3:
+	path = args[2]
+      
+      path = os.path.dirname(filename)
+      filename = os.path.basename(filename)
+      deleteFileByPath( filename, path )
       
     if args[0] == "list":
       path = "/"
