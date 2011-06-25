@@ -311,48 +311,6 @@ def uploadFile ( filepath, path="/" ) :
 
 
 
-def renameFile ( filepath, newfilepath, path="/" ) :
-  global tokenexpiry, token
-  
-  # get new auth token if time expired
-  if tokenexpiry < time.time():
-    token = authenticate( username, password, backupName )
-  
-  ticketform = { 'name': 'DUNGEONTICKET', 'data': token }
-  dacform = { 'name': 'DUNGEONDEVICE', 'data': dac }
-  requestform = { 'name': 'AYMARA', 'data' : "AG\x05\b" }
-  commandform = { 'name': 'command', 'data' : "RENAME" }
-  init = { 'name': 'init', 'data' : "13000" }
-  option1 = { 'name': 'option1', 'data' : "0" }
-  option10 = { 'name': 'option10', 'data' : "" }
-  option2 = { 'name': 'option2', 'data' : time.strftime("%Y-%m-%d %H:%M:%S") }
-  option3 = { 'name': 'option3', 'data' : "15" }
-  option4 = { 'name': 'option4', 'data' : "0" }
-  
-  option5details = generateMeta( "id", { "id" : "12345" }, "here", { "here" : "test123" } )
-  
-  print option5details
-		# 
-  option5 = { 'name': 'option5', 'data' : option5details  }
-  option6 = { 'name': 'option6', 'data' : "test" }
-  option7 = { 'name': 'option7', 'data' : "NOT_CRYPTED" }
-  option8 = { 'name': 'option8', 'data' : "0" }
-  param1 = { 'name': 'param1', 'data' : path }
-  param2 = { 'name': 'param2', 'data' : "test" }
-  #filedetail = { 'name': 'file', 'data' : "Content-Type: text/plain\r\n\r\n" + filecontents , 'filename' : filename }
-  
-  forms = [ticketform, dacform,requestform, commandform, init, option1, option10,option2, option3, option4, option5, option6, option7, option8,  param1, param2]
-  
-  contenttype, formdata = getFormData( forms )
-  
-  #connection.set_debuglevel(9)
-  headers = {"User-Agent": useragent, "Content-Type" : contenttype, "Accept" : "*/*"}
-  connection.request("POST", "/gate/dungeongate.php", formdata, headers)
-  response = connection.getresponse()
-  print "Uploaded" , filepath, "to", path
-  #filehandle.close()
-  return response.read()
-
 
 def deleteFiles ( ids ):
   details = "ids="
@@ -426,7 +384,7 @@ if __name__ == '__main__':
     
     opts, args = getopt.getopt(sys.argv[1:], "help")
     if len(args) == 0:
-      print "Use one of these commands: upload delete list rename"
+      print "Use one of these commands: upload delete list"
       sys.exit(2)
       
     if args[0] == "upload":
@@ -465,9 +423,6 @@ if __name__ == '__main__':
 	else: 
 	  print file[1], " - ", file[0]
 	  
-    if args[0] == "rename":
-      print renameFile(args[1], args[2], "/")
-    
     #print "Logging in"
 
     #token = authenticate( username, password, backupName)
