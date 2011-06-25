@@ -312,6 +312,8 @@ def deleteFiles ( ids ):
       details += "|"
     else:
       first = False
+    if id[0] == "AG\x05\x05F":
+      id[0] = "F"
     details += str(len(str(id[6]))) + "|" + str(id[6])
     detail2 += str(len(id[0])) + "|"+ id[0] + "|"
   fullcommand = details + detail2 + '#'
