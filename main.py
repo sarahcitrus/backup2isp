@@ -268,7 +268,10 @@ def uploadFile ( filepath, path="/" ) :
   #deleteFileByPath(filepath, path)
   global tokenexpiry, token
   
-  contenttypetext = mimetypes.guess_type( filepath )
+  contenttypetextdetail = mimetypes.guess_type( filepath )
+  contenttypetext = "text/plain"
+  if contenttypetextdetail[0] != None:
+    contenttypetext[0] = contenttypetextdetail[0]
   
   filename = os.path.basename(filepath)
   filehandle = open(filepath)
@@ -421,12 +424,16 @@ def getFile ( path, destfile ):
   connection.request("POST", "/gate/dungeongate.php", formdata, headers)
   response = connection.getresponse()
   
-  writefile = open(destfile,"w")
-  writefile.write( response.read() )
-  writefile.close()
+  responsecontent = response.read()
   
-  return True
-  
+  if responsecontent[0:5] != "ERROR":
+    writefile = open(destfile,"w")
+    writefile.write( responsecontent )
+    writefile.close()
+    
+    return True
+  else:
+    return False
 
 if __name__ == '__main__':
     import getopt
@@ -479,28 +486,11 @@ if __name__ == '__main__':
       destpath = os.path.basename( args[1] )
       if len(args) > 2:
 	destpath = args[2]
-      print destpath
-      getFile(args[1], destpath)
-      print "Written file to", destpath
-      sys.exit(0)
+      if getFile(args[1], destpath):
+	print "Written file to", destpath
+	sys.exit(0)
+      else:
+	print "Unable to fetch file"
+	sys.exit(1)
       
     print "No commands entered"
-    #print "Logging in"
-
-    #token = authenticate( username, password, backupName)
-    #if token == None:
-    #  print "Login failed"
-    #  sys.exit(1)
-    #print "Auth expires ", time.ctime(tokenexpiry)
-
-    #if not quickConnect:
-      # again, gives us info we dont care about, but if not on quick mode dont do it
-      #listBackups()
-      #doTicket("VIEWCONFIGURATION")
-
-
-    #print doTicket("LIST")
-    #print listBackup()
-    #print uploadMultipleFiles("/local/files", "/Pictures/test123")
-    #print deleteFileByPath( ["test2"], "/Pictures/test12" )
-    #doTicket("GETTIMESTAMP");
