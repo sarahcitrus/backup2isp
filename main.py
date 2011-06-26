@@ -476,8 +476,12 @@ if __name__ == '__main__':
       sys.exit(0)
 	  
     if args[0] == "download":
-      getFile(args[1], args[2])
-      print "Written file to", args[2]
+      destpath = os.path.basename( args[1] )
+      if len(args) > 2:
+	destpath = args[2]
+      print destpath
+      getFile(args[1], destpath)
+      print "Written file to", destpath
       sys.exit(0)
       
     print "No commands entered"
