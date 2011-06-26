@@ -434,6 +434,28 @@ def getFile ( path, destfile ):
   else:
     return False
 
+def listFileTreeRemote(path):
+  fulllist = []
+  details = listFiles(path)
+  for detail in details:
+    if detail[0] == "F" or detail[0] == "AG\x05\x05F":
+      itemdetails = {"path": os.path.join(path, detail[1]), "filesize": detail[2], "modified" : detail[5]}
+      fulllist.append(itemdetails)
+    else:
+      fulllist.append(listFileTreeRemote(os.path.join(path, detail[1])))
+  return fulllist
+  
+def listFileTreeLocal(localpath):
+  return "test"
+
+def sync ( localpath, path="/" ) :
+  remoteitems = listFileTreeRemote(path)
+  print remoteitems
+  
+  localitems = listFileTreeLocal(localpath)
+  
+  
+
 if __name__ == '__main__':
     import getopt
     
@@ -492,4 +514,7 @@ if __name__ == '__main__':
 	print "Unable to fetch file"
 	sys.exit(1)
       
+    if args[0] == "sync":
+      sync(args[1])
+      sys.exit(1)
     print "No commands entered"

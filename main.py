@@ -1,6 +1,6 @@
 #! /usr/bin/python
 
-import pyinotify, json, os, commands, backup, sys
+import pyinotify, json, os, commands, backup, sys, signal
 
 wm = pyinotify.WatchManager()  # Watch Manager
 mask = pyinotify.IN_DELETE | pyinotify.IN_CREATE | pyinotify.IN_CLOSE_WRITE  # watched events
@@ -25,14 +25,27 @@ class EventHandler(pyinotify.ProcessEvent):
 	  backup.uploadMultipleFiles(event.pathname)
 	else:
 	  print "remove", event.pathname
-	  backup.deleteFileByPath(event.pathname)
+	  #backup.deleteFileByPath(event.pathname)
+	  print "Not deleting remotely"
 
-notifier = pyinotify.Notifier(wm, EventHandler())
+syncpath = '/tmp/testsync'
+notifier = pyinotify.ThreadedNotifier(wm, EventHandler())
 mask = pyinotify.IN_DELETE | pyinotify.IN_CREATE | pyinotify.IN_CLOSE_WRITE 
-wdd = wm.add_watch('/tmp/testsync', mask)
-try:
-  notifier.loop()
-except KeyboardInterrupt:
-  print "Exiting"
-  notifier.stop()
-  sys.exit(1)
+wdd = wm.add_watch(syncpath, mask)
+notifier.start()
+print "Now watching", syncpath
+
+def signal_handler(signal, frame):
+        print 'Exiting'
+        notifier.stop()
+        sys.exit(0)
+
+
+
+# do a sync
+print "Syncing files changed since last run"
+backup.sync(syncpath)
+
+signal.signal(signal.SIGINT, signal_handler)
+print 'Finished sync, just listening on changes'
+signal.pause()
