@@ -265,7 +265,7 @@ def uploadMultipleFiles ( localpath, remotepath="/" ):
   return True
 
 def uploadFile ( filepath, path="/" ) :
-  deleteFileByPath(filepath, path)
+  #deleteFileByPath(filepath, path)
   global tokenexpiry, token
   
   filename = os.path.basename(filepath)
@@ -279,10 +279,10 @@ def uploadFile ( filepath, path="/" ) :
   
   ticketform = { 'name': 'DUNGEONTICKET', 'data': token }
   dacform = { 'name': 'DUNGEONDEVICE', 'data': dac }
-  requestform = { 'name': 'AYMARA', 'data' : "AG\x05\a" }
+  requestform = { 'name': 'AYMARA', 'data' : "AG\x05\x06" }
   commandform = { 'name': 'command', 'data' : "PUT" }
   init = { 'name': 'init', 'data' : "13000" }
-  option1 = { 'name': 'option1', 'data' : "0" }
+  option1 = { 'name': 'option1', 'data' : "O" }
   option10 = { 'name': 'option10', 'data' : "" }
   option2 = { 'name': 'option2', 'data' : time.strftime("%Y-%m-%d %H:%M:%S",time.localtime(os.path.getmtime(filepath))) }
   option3 = { 'name': 'option3', 'data' : "15" }
