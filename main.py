@@ -114,7 +114,7 @@ def authenticate( username, password, backup ):
 	print "Token expired"
   else:
     print "No existing token"
-  
+  print "here"
   dacform = { 'name': 'DUNGEONDEVICE', 'data': dac }
   authform = { 'name': 'AYMARA', 'data' : "AG\x05\bcommand=LOGIN_BY_SSO#" + 
   generateMeta( "sso_mode", { 'sso_mode' : provider } , 
@@ -387,6 +387,17 @@ def getFile ( path, destfile ):
   # get new auth token if time expired
   if tokenexpiry < time.time():
     token = authenticate( username, password, backupName )
+    
+  # if its a dir, recurse through tree and get all
+  details = listFiles(path)
+  if len(details[0]) > 1:
+    # is a dir
+    if not os.path.exists(destfile):
+      os.makedirs(destfile)
+    for detail in details:
+      getFile(os.path.join(path,detail[1]), os.path.join(destfile, detail[1]))
+    return
+  print "Putting", path, "to",destfile
   
   dacform = { 'name': 'DUNGEONDEVICE', 'data': dac }
   ticketform = { 'name': 'DUNGEONTICKET', 'data': token }
