@@ -172,7 +172,6 @@ def doTicket( command , param=None ):
   headers = {"User-Agent": useragent, "Content-Type" : contenttype, "Accept" : "*/*"}
   connection.request("POST", "/gate/dungeongate.php", formdata, headers)
   response = connection.getresponse()
-  print response.read()
   return parseMeta(response.read())
 
 if not quickConnect:
