@@ -271,7 +271,7 @@ def uploadFile ( filepath, path="/" ) :
   contenttypetextdetail = mimetypes.guess_type( filepath )
   contenttypetext = "text/plain"
   if contenttypetextdetail[0] != None:
-    contenttypetext[0] = contenttypetextdetail[0]
+    contenttypetext = contenttypetextdetail[0]
   
   filename = os.path.basename(filepath)
   filehandle = open(filepath)
