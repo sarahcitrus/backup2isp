@@ -422,7 +422,7 @@ if __name__ == '__main__':
     
     opts, args = getopt.getopt(sys.argv[1:], "help")
     if len(args) == 0:
-      print "Use one of these commands: upload delete list get"
+      print "Use one of these commands: upload delete list download"
       sys.exit(2)
       
     if args[0] == "upload":
@@ -449,6 +449,8 @@ if __name__ == '__main__':
 	path = "/"
       filename = os.path.basename(filename)
       deleteFileByPath( filename, path )
+      sys.exit(0)
+      
       
     if args[0] == "list":
       path = "/"
@@ -460,10 +462,14 @@ if __name__ == '__main__':
 	  print file
 	else: 
 	  print file[1], " - ", file[0]
+      sys.exit(0)
 	  
-    if args[0] == "get":
+    if args[0] == "download":
       getFile(args[1], args[2])
       print "Written file to", args[2]
+      sys.exit(0)
+      
+    print "No commands entered"
     #print "Logging in"
 
     #token = authenticate( username, password, backupName)
