@@ -1,5 +1,5 @@
 #! /usr/bin/python
-import httplib, urllib, sys, mimetools,re, os, pickle, time, socket, hashlib, ConfigParser, getopt
+import httplib, urllib, sys, mimetools,re, os, pickle, time, socket, hashlib, ConfigParser, getopt, mimetypes
 
 # setup paths
 global tokenexpiry, workstation_id, workstation_name
@@ -268,6 +268,8 @@ def uploadFile ( filepath, path="/" ) :
   #deleteFileByPath(filepath, path)
   global tokenexpiry, token
   
+  contenttypetext = mimetypes.guess_type( filepath )
+  
   filename = os.path.basename(filepath)
   filehandle = open(filepath)
   filecontents = filehandle.read()
@@ -294,7 +296,7 @@ def uploadFile ( filepath, path="/" ) :
   option9 = { 'name': 'option9', 'data' : "" }
   param1 = { 'name': 'param1', 'data' : path }
   param2 = { 'name': 'param2', 'data' : filename }
-  filedetail = { 'name': 'file', 'data' : "Content-Type: text/plain\r\n\r\n" + filecontents , 'filename' : filename }
+  filedetail = { 'name': 'file', 'data' : "Content-Type: " + contenttypetext[0] + "\r\n\r\n" + filecontents , 'filename' : filename }
   
   forms = [ticketform, dacform,requestform, commandform, init, option1, option10,option2, option3, option4, option5, option6, option7, option8, option9, param1, param2, filedetail]
   
@@ -409,9 +411,7 @@ def getFile ( path, destfile ):
   response = connection.getresponse()
   
   writefile = open(destfile,"w")
-  print "got response"
   writefile.write( response.read() )
-  print "written"
   writefile.close()
   
   return True
@@ -462,7 +462,8 @@ if __name__ == '__main__':
 	  print file[1], " - ", file[0]
 	  
     if args[0] == "get":
-      print getFile(args[1], args[2])
+      getFile(args[1], args[2])
+      print "Written file to", args[2]
     #print "Logging in"
 
     #token = authenticate( username, password, backupName)
