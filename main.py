@@ -379,12 +379,50 @@ def listFiles ( path="/" ):
     details.append( line.split("|") )
   return details
 
+def getFile ( path, destfile ):
+  global tokenexpiry, token
+  
+  # get new auth token if time expired
+  if tokenexpiry < time.time():
+    token = authenticate( username, password, backupName )
+  
+  dacform = { 'name': 'DUNGEONDEVICE', 'data': dac }
+  ticketform = { 'name': 'DUNGEONTICKET', 'data': token }
+  requestform = { 'name': 'AYMARA', 'data' : "AG\x05\x06" }
+  
+  filename = os.path.basename(path)
+  path = os.path.dirname(path)
+  
+  commandform = { 'name': 'command', 'data' : "GET" }
+  initform = { 'name': 'init', 'data' : "13000" }
+  param1 = { 'name': 'param1', 'data' : path }
+  param2 = { 'name': 'param2', 'data' : filename }
+  
+  forms = [ticketform, commandform, dacform, requestform, initform, param1, param2]
+  
+  contenttype, formdata = getFormData( forms )
+  
+  
+  #connection.set_debuglevel(9)
+  headers = {"User-Agent": useragent, "Content-Type" : contenttype, "Accept" : "*/*"}
+  connection.request("POST", "/gate/dungeongate.php", formdata, headers)
+  response = connection.getresponse()
+  
+  writefile = open(destfile,"w")
+  print "got response"
+  writefile.write( response.read() )
+  print "written"
+  writefile.close()
+  
+  return True
+  
+
 if __name__ == '__main__':
     import getopt
     
     opts, args = getopt.getopt(sys.argv[1:], "help")
     if len(args) == 0:
-      print "Use one of these commands: upload delete list"
+      print "Use one of these commands: upload delete list get"
       sys.exit(2)
       
     if args[0] == "upload":
@@ -423,6 +461,8 @@ if __name__ == '__main__':
 	else: 
 	  print file[1], " - ", file[0]
 	  
+    if args[0] == "get":
+      print getFile(args[1], args[2])
     #print "Logging in"
 
     #token = authenticate( username, password, backupName)
