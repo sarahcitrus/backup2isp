@@ -114,7 +114,6 @@ def authenticate( username, password, backup ):
 	print "Token expired"
   else:
     print "No existing token"
-  print "here"
   dacform = { 'name': 'DUNGEONDEVICE', 'data': dac }
   authform = { 'name': 'AYMARA', 'data' : "AG\x05\bcommand=LOGIN_BY_SSO#" + 
   generateMeta( "sso_mode", { 'sso_mode' : provider } , 
@@ -288,7 +287,8 @@ def uploadFile ( filepath, path="/" ) :
   init = { 'name': 'init', 'data' : "13000" }
   option1 = { 'name': 'option1', 'data' : "O" }
   option10 = { 'name': 'option10', 'data' : "" }
-  option2 = { 'name': 'option2', 'data' : time.strftime("%Y-%m-%d %H:%M:%S",time.localtime(os.path.getmtime(filepath))) }
+  timedetail = time.strftime("%Y-%m-%d %H:%M:%S",time.localtime(os.path.getmtime(filepath)))
+  option2 = { 'name': 'option2', 'data' : timedetail }
   option3 = { 'name': 'option3', 'data' : "15" }
   option4 = { 'name': 'option4', 'data' : "0" }
   option5 = { 'name': 'option5', 'data' : "2|#type=1|0|#hidden=1|0|#system=1|0|#readonly=1|0|#permissions=1|0|#;" }
@@ -435,26 +435,54 @@ def getFile ( path, destfile ):
     return False
 
 def listFileTreeRemote(path):
-  fulllist = []
+  fulllist = dict()
   details = listFiles(path)
   for detail in details:
     if detail[0] == "F" or detail[0] == "AG\x05\x05F":
-      itemdetails = {"path": os.path.join(path, detail[1]), "filesize": detail[2], "modified" : detail[5]}
-      fulllist.append(itemdetails)
+      rawpath = os.path.join(path, detail[1])
+      filepath = rawpath[len(path):len(rawpath)]
+      itemdetails = {"filesize": int(detail[2]), "modified" : detail[5]}
+      fulllist[filepath] = itemdetails
     else:
-      fulllist.append(listFileTreeRemote(os.path.join(path, detail[1])))
+      subitems = listFileTreeRemote(os.path.join(path, detail[1]))
+      for subitemkey in subitems.keys():
+	subitem = subitems[subitemkey]
+	fulllist[subitemkey] = subitem
   return fulllist
   
 def listFileTreeLocal(localpath):
-  return "test"
+  fulllist = dict()
+  for root, dirs, files in os.walk(localpath):
+    for name in files:
+        rawpath = os.path.join(root, name)
+	filepath = rawpath[len(localpath):len(rawpath)]
+	size = os.path.getsize(rawpath)
+	itemdetails = {"path" : rawpath,"filesize" : size, "modified" : time.strftime("%Y-%m-%d %H:%M:%S",time.localtime(os.path.getmtime(rawpath)))}
+	fulllist[filepath] = itemdetails
+  return fulllist
 
 def sync ( localpath, path="/" ) :
+  print "Getting remote items"
   remoteitems = listFileTreeRemote(path)
-  print remoteitems
   
+  print "Getting local items"
   localitems = listFileTreeLocal(localpath)
   
+  diffitems = dict()
   
+  # compare and upload different
+  for key in localitems:
+    localitem = localitems[key]
+    if key in remoteitems:
+      remoteitem = remoteitems[key]
+      if remoteitem["filesize"] != localitem["filesize"] or remoteitem["modified"] != localitem["modified"]:
+	diffitems[key] = localitem
+    else:
+      diffitems[key] = localitem
+  
+  for key in diffitems:
+    item = diffitems[key]
+    uploadFile(item["path"], (path + key).replace("//", "/"))
 
 if __name__ == '__main__':
     import getopt
@@ -500,7 +528,7 @@ if __name__ == '__main__':
 	if len(file) == 1:
 	  print file
 	else: 
-	  print file[1], " - ", file[0]
+	  print file[1], " - ", file[0] , "-",file
       sys.exit(0)
 	  
     if args[0] == "download":
@@ -515,6 +543,6 @@ if __name__ == '__main__':
 	sys.exit(1)
       
     if args[0] == "sync":
-      sync(args[1])
+      sync(args[1], args[2])
       sys.exit(1)
     print "No commands entered"
