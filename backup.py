@@ -298,7 +298,7 @@ def uploadFile ( filepath, path="/" ) :
   option9 = { 'name': 'option9', 'data' : "" }
   param1 = { 'name': 'param1', 'data' : path }
   param2 = { 'name': 'param2', 'data' : filename }
-  filedetail = { 'name': 'file', 'data' : "Content-Type: " + contenttypetext[0] + "\r\n\r\n" + filecontents , 'filename' : filename }
+  filedetail = { 'name': 'file', 'data' : "Content-Type: " + contenttypetext + "\r\n\r\n" + filecontents , 'filename' : filename }
   
   forms = [ticketform, dacform,requestform, commandform, init, option1, option10,option2, option3, option4, option5, option6, option7, option8, option9, param1, param2, filedetail]
   
@@ -441,7 +441,7 @@ def listFileTreeRemote(path):
     if detail[0] == "F" or detail[0] == "AG\x05\x05F":
       rawpath = os.path.join(path, detail[1])
       filepath = rawpath[len(path):len(rawpath)]
-      itemdetails = {"filesize": int(detail[2]), "modified" : detail[5]}
+      itemdetails = {"filesize": int(detail[2]), "modified" : detail[4]}
       fulllist[filepath] = itemdetails
     else:
       subitems = listFileTreeRemote(os.path.join(path, detail[1]))
@@ -462,10 +462,10 @@ def listFileTreeLocal(localpath):
   return fulllist
 
 def sync ( localpath, path="/" ) :
-  print "Getting remote items"
+  print "Finding remote items"
   remoteitems = listFileTreeRemote(path)
   
-  print "Getting local items"
+  print "Finding local items"
   localitems = listFileTreeLocal(localpath)
   
   diffitems = dict()
@@ -482,8 +482,10 @@ def sync ( localpath, path="/" ) :
   
   for key in diffitems:
     item = diffitems[key]
-    uploadFile(item["path"], (path + key).replace("//", "/"))
-
+    uploadFile(item["path"], path)
+  if len(diffitems) == 0:
+    print "Nothing to sync"
+    
 if __name__ == '__main__':
     import getopt
     
