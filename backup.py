@@ -51,26 +51,29 @@ workstation_id = hashlib.md5(workstation_name).hexdigest()
 
 tokenexpiry = 0
 
-connection = httplib.HTTPSConnection(server)
-
 def versionCheck ( ):
   headers = {"User-Agent": useragent}
+  connection = httplib.HTTPSConnection(server)
   connection.request("GET", "/gate/checkme.php", {}, headers)
   response = connection.getresponse()
   if ( response.read() != 'CUR' ):
     print "Server says we are not running latest version"
   else:
     print "Latest version useragent"
+  connection.close()
 
 def ping ( ):
   headers = {"User-Agent": useragent}
+  connection = httplib.HTTPSConnection(server)
   connection.request("GET", "/gate/ping.php", {}, headers)
   response = connection.getresponse()
   if ( response.read() ):
     print "Connected"
   else:
     print "Failed to connect"
+    connection.close()
     sys.exit()
+  connection.close()
 
 # had to implement this myself, as urllib doesnt cope with multiple forms in one post well, and server does silly things
 def getFormData ( forms ) :
@@ -125,9 +128,11 @@ def authenticate( username, password, backup ):
   
   #connection.set_debuglevel(9)
   headers = {"User-Agent": useragent, "Content-Type" : contenttype, "Accept" : "*/*"}
+  connection = httplib.HTTPSConnection(server)
   connection.request("POST", "/gate/dungeongate.php", formdata, headers)
   response = connection.getresponse()
   tokendata = response.read()
+  connection.close()
   results = parseMeta( tokendata )
   results = results[0]
   if "session" not in results:
@@ -169,8 +174,10 @@ def doTicket( command , param=None ):
   
   #connection.set_debuglevel(9)
   headers = {"User-Agent": useragent, "Content-Type" : contenttype, "Accept" : "*/*"}
+  connection = httplib.HTTPSConnection(server)
   connection.request("POST", "/gate/dungeongate.php", formdata, headers)
   response = connection.getresponse()
+  connection.close()
   return parseMeta(response.read())
 
 if not quickConnect:
@@ -266,53 +273,58 @@ def uploadFile ( filepath, path="/" ) :
   #deleteFileByPath(filepath, path)
   global tokenexpiry, token
   
-  contenttypetextdetail = mimetypes.guess_type( filepath )
-  contenttypetext = "text/plain"
-  if contenttypetextdetail[0] != None:
-    contenttypetext = contenttypetextdetail[0]
-  
-  filename = os.path.basename(filepath)
-  filehandle = open(filepath)
-  filecontents = filehandle.read()
-  sha1 = hashlib.sha1( filecontents ).hexdigest().upper()
+  try:
+    contenttypetextdetail = mimetypes.guess_type( filepath )
+    contenttypetext = "text/plain"
+    if contenttypetextdetail[0] != None:
+      contenttypetext = contenttypetextdetail[0]
+    
+    filename = os.path.basename(filepath)
+    filehandle = open(filepath)
+    filecontents = filehandle.read()
+    sha1 = hashlib.sha1( filecontents ).hexdigest().upper()
 
-  # get new auth token if time expired
-  if tokenexpiry < time.time():
-    token = authenticate( username, password, backupName )
-  
-  ticketform = { 'name': 'DUNGEONTICKET', 'data': token }
-  dacform = { 'name': 'DUNGEONDEVICE', 'data': dac }
-  requestform = { 'name': 'AYMARA', 'data' : "AG\x05\x06" }
-  commandform = { 'name': 'command', 'data' : "PUT" }
-  init = { 'name': 'init', 'data' : "13000" }
-  option1 = { 'name': 'option1', 'data' : "O" }
-  option10 = { 'name': 'option10', 'data' : "" }
-  timedetail = time.strftime("%Y-%m-%d %H:%M:%S",time.localtime(os.path.getmtime(filepath)))
-  option2 = { 'name': 'option2', 'data' : timedetail }
-  option3 = { 'name': 'option3', 'data' : "15" }
-  option4 = { 'name': 'option4', 'data' : "0" }
-  option5 = { 'name': 'option5', 'data' : "2|#type=1|0|#hidden=1|0|#system=1|0|#readonly=1|0|#permissions=1|0|#;" }
-  option6 = { 'name': 'option6', 'data' : "SHA1:" + sha1 }
-  option7 = { 'name': 'option7', 'data' : "NOT_CRYPTED" }
-  option8 = { 'name': 'option8', 'data' : "0" }
-  option9 = { 'name': 'option9', 'data' : "" }
-  param1 = { 'name': 'param1', 'data' : path }
-  param2 = { 'name': 'param2', 'data' : filename }
-  filedetail = { 'name': 'file', 'data' : "Content-Type: " + contenttypetext + "\r\n\r\n" + filecontents , 'filename' : filename }
-  
-  forms = [ticketform, dacform,requestform, commandform, init, option1, option10,option2, option3, option4, option5, option6, option7, option8, option9, param1, param2, filedetail]
-  
-  contenttype, formdata = getFormData( forms )
-  
-  #connection.set_debuglevel(9)
-  headers = {"User-Agent": useragent, "Content-Type" : contenttype, "Accept" : "*/*"}
-  print "Uploading" , filepath, "to", path
-  connection.request("POST", "/gate/dungeongate.php", formdata, headers)
-  response = connection.getresponse()
-  print "Uploaded" , filepath, "to", path
+    # get new auth token if time expired
+    if tokenexpiry < time.time():
+      token = authenticate( username, password, backupName )
+    
+    ticketform = { 'name': 'DUNGEONTICKET', 'data': token }
+    dacform = { 'name': 'DUNGEONDEVICE', 'data': dac }
+    requestform = { 'name': 'AYMARA', 'data' : "AG\x05\x06" }
+    commandform = { 'name': 'command', 'data' : "PUT" }
+    init = { 'name': 'init', 'data' : "13000" }
+    option1 = { 'name': 'option1', 'data' : "O" }
+    option10 = { 'name': 'option10', 'data' : "" }
+    timedetail = time.strftime("%Y-%m-%d %H:%M:%S",time.localtime(os.path.getmtime(filepath)))
+    option2 = { 'name': 'option2', 'data' : timedetail }
+    option3 = { 'name': 'option3', 'data' : "15" }
+    option4 = { 'name': 'option4', 'data' : "0" }
+    option5 = { 'name': 'option5', 'data' : "2|#type=1|0|#hidden=1|0|#system=1|0|#readonly=1|0|#permissions=1|0|#;" }
+    option6 = { 'name': 'option6', 'data' : "SHA1:" + sha1 }
+    option7 = { 'name': 'option7', 'data' : "NOT_CRYPTED" }
+    option8 = { 'name': 'option8', 'data' : "0" }
+    option9 = { 'name': 'option9', 'data' : "" }
+    param1 = { 'name': 'param1', 'data' : path }
+    param2 = { 'name': 'param2', 'data' : filename }
+    filedetail = { 'name': 'file', 'data' : "Content-Type: " + contenttypetext + "\r\n\r\n" + filecontents , 'filename' : filename }
+    
+    forms = [ticketform, dacform,requestform, commandform, init, option1, option10,option2, option3, option4, option5, option6, option7, option8, option9, param1, param2, filedetail]
+    
+    contenttype, formdata = getFormData( forms )
+    
+    connection = httplib.HTTPSConnection(server)
+    #connection.set_debuglevel(9)
+    headers = {"User-Agent": useragent, "Content-Type" : contenttype, "Accept" : "*/*"}
+    print "Uploading" , filepath, "to", path
+    connection.request("POST", "/gate/dungeongate.php", formdata, headers)
+    response = connection.getresponse()
+    connection.close()
+    print "Uploaded" , filepath, "to", path
+    return response.read()
+  except Exception as error:
+    print error
   filehandle.close()
-  return response.read()
-
+  return False
 
 
 
@@ -375,9 +387,11 @@ def listFiles ( path="/" ):
   
   #connection.set_debuglevel(9)
   headers = {"User-Agent": useragent, "Content-Type" : contenttype, "Accept" : "*/*"}
+  connection = httplib.HTTPSConnection(server)
   connection.request("POST", "/gate/dungeongate.php", formdata, headers)
   response = connection.getresponse()
   filelist = response.read()
+  connection.close()
   details = []
   for line in filelist.splitlines():
     details.append( line.split("|") )
@@ -420,11 +434,12 @@ def getFile ( path, destfile ):
   
   #connection.set_debuglevel(9)
   headers = {"User-Agent": useragent, "Content-Type" : contenttype, "Accept" : "*/*"}
+  connection = httplib.HTTPSConnection(server)
   connection.request("POST", "/gate/dungeongate.php", formdata, headers)
   response = connection.getresponse()
   
   responsecontent = response.read()
-  
+  connection.close()
   if responsecontent[0:5] != "ERROR":
     writefile = open(destfile,"w")
     writefile.write( responsecontent )
