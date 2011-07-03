@@ -419,8 +419,17 @@ def getFile ( path, destfile,modtime=None ):
     return
     
   if modtime == None:
-    # fetch modification time
-    print "Here"
+    # fetch modification time, need to file dirname
+    itemname = os.path.basename(path)
+    dirname = os.path.dirname(path)
+    if dirname == "":
+      dirname = "/"
+    filelist = listFiles(dirname)
+    for filedetail in filelist:
+      if filedetail[1] == itemname:
+	timestamp = datetime.datetime.strptime(filedetail[4], "%Y-%m-%d %H:%M:%S")
+	modtime = int(timestamp.strftime("%s"))
+	
   print "Putting", path, "to",destfile
   dacform = { 'name': 'DUNGEONDEVICE', 'data': dac }
   ticketform = { 'name': 'DUNGEONTICKET', 'data': token }
