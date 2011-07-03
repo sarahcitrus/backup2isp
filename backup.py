@@ -561,7 +561,7 @@ def sync ( localpath, path="/" ) :
     item = diffitems[key]
     remotedest = item["path"].replace( localpath, "" )
     destdir = (path + remotedest).replace("//", "/")
-    uploadFile(item["path"], destdir)
+    uploadFile(item["path"], os.path.dirname(destdir))
   if len(diffitems) == 0:
     print "Nothing to sync"
     
