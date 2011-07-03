@@ -509,18 +509,18 @@ def getFile ( path, destfile,modtime=None ):
   else:
     return False
 
-def listFileTreeRemote(path):
+def listFileTreeRemote(path, originalpath):
   fulllist = dict()
   details = listFiles(path)
   if len(details[0]) > 1:
     for detail in details:
       if detail[0] == "F" or detail[0] == "AG\x05\x05F":
 	rawpath = os.path.join(path, detail[1])
-	filepath = rawpath[len(path):len(rawpath)]
+	filepath = rawpath[len(originalpath):len(rawpath)]
 	itemdetails = {"filesize": int(detail[2]), "modified" : detail[4]}
 	fulllist[filepath] = itemdetails
       else:
-	subitems = listFileTreeRemote(os.path.join(path, detail[1]))
+	subitems = listFileTreeRemote(os.path.join(path, detail[1]), originalpath)
 	for subitemkey in subitems.keys():
 	  subitem = subitems[subitemkey]
 	  fulllist[subitemkey] = subitem
@@ -539,7 +539,7 @@ def listFileTreeLocal(localpath):
 
 def sync ( localpath, path="/" ) :
   print "Finding remote items"
-  remoteitems = listFileTreeRemote(path)
+  remoteitems = listFileTreeRemote(path, path)
   
   print "Finding local items"
   localitems = listFileTreeLocal(localpath)
@@ -556,7 +556,7 @@ def sync ( localpath, path="/" ) :
 	diffitems[key] = localitem
     else:
       diffitems[key] = localitem
-      
+  
   for key in diffitems:
     item = diffitems[key]
     remotedest = item["path"].replace( localpath, "" )
