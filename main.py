@@ -9,7 +9,7 @@ localwatches = []
 class EventHandler(pyinotify.ProcessEvent):
     def process_IN_CREATE(self, event):
         if event.dir:
-	  localwatches.append(wm2.add_watch(event.pathname, mask, rec=True));
+	  localwatches.append(wm.add_watch(event.pathname, mask, rec=True));
 	  print "create", event.pathname
 	  backup.uploadMultipleFiles(event.pathname, backup.remotepath)
 

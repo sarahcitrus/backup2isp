@@ -547,6 +547,7 @@ def sync ( localpath, path="/" ) :
   diffitems = dict()
   
   # compare and upload different
+  
   for key in localitems:
     localitem = localitems[key]
     if key in remoteitems:
@@ -555,10 +556,12 @@ def sync ( localpath, path="/" ) :
 	diffitems[key] = localitem
     else:
       diffitems[key] = localitem
-  
+      
   for key in diffitems:
     item = diffitems[key]
-    uploadFile(item["path"], path)
+    remotedest = item["path"].replace( localpath, "" )
+    destdir = (path + remotedest).replace("//", "/")
+    uploadFile(item["path"], destdir)
   if len(diffitems) == 0:
     print "Nothing to sync"
     
