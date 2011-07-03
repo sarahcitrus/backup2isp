@@ -12,6 +12,8 @@ class EventHandler(pyinotify.ProcessEvent):
 	  localwatches.append(wm.add_watch(event.pathname, mask, rec=True));
 	  print "create", event.pathname
 	  backup.uploadMultipleFiles(event.pathname, backup.remotepath)
+	else:
+	  print "create", event
 
     def process_IN_DELETE(self, event):
 	print "remove", event.pathname

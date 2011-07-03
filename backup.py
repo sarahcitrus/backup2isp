@@ -312,6 +312,7 @@ def uploadMultipleFiles ( localpath, remotepath="/" ):
 def uploadFile ( filepath, path="/" ) :
   #deleteFileByPath(filepath, path)
   global tokenexpiry, token
+  print "Uploading" , filepath, "to", path
   
   try:
     contenttypetextdetail = mimetypes.guess_type( filepath )
@@ -355,7 +356,6 @@ def uploadFile ( filepath, path="/" ) :
     connection = httplib.HTTPSConnection(server)
     #connection.set_debuglevel(9)
     headers = {"User-Agent": useragent, "Content-Type" : contenttype, "Accept" : "*/*"}
-    print "Uploading" , filepath, "to", path
     connection.request("POST", "/gate/dungeongate.php", formdata, headers)
     response = connection.getresponse()
     connection.close()
@@ -543,7 +543,6 @@ def sync ( localpath, path="/" ) :
   
   print "Finding local items"
   localitems = listFileTreeLocal(localpath)
-  
   diffitems = dict()
   
   # compare and upload different
