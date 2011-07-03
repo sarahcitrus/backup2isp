@@ -4,7 +4,6 @@ import httplib, urllib, sys, mimetools,re, os, pickle, time, socket, hashlib, Co
 # setup paths
 global tokenexpiry, workstation_id, workstation_name
 quickConnect = 1
-backupName = "testbackup"
 configdir = ".backup2isp"
 tokenfilename = "token"
 configpath = os.path.join(os.getenv("HOME"), configdir)
@@ -29,6 +28,11 @@ if not os.path.exists( configfile ):
   config.set('Server', 'username', raw_input('Your username:'))
   config.set('Server', 'password', raw_input('Your password:'))
   
+  config.add_section('Local')
+  config.set('Local', 'localpath', raw_input('Local path to backup:'))
+  config.set('Local', 'remotepath', raw_input('Remote destination:'))
+  config.set('Local', 'backupname', raw_input('Backup name:'))
+  
   
   # Writing our configuration file to 'example.cfg'
   with open(configfile, 'wb') as configdetail:
@@ -42,6 +46,9 @@ dac = config.get('Server', 'dac')
 provider = config.get('Server', 'provider')
 username = config.get('Server', 'username')
 password = config.get('Server', 'password')
+backupName = config.get('Local', 'backupname')
+remotepath = config.get('Local', 'remotepath')
+syncpath = config.get('Local', 'localpath')
 
 tokenfile = os.path.join(configpath, tokenfilename)
 
@@ -162,23 +169,31 @@ def doTicket( command , param=None ):
   
   dacform = { 'name': 'DUNGEONDEVICE', 'data': dac }
   ticketform = { 'name': 'DUNGEONTICKET', 'data': token }
+  
+  commandid = "\x05"
+  
+  if command in [ "LSMYBACKUPS", "ADDBACKUP" ]:
+    commandid = "\b"
+  
   if param == None:
-    requestform = { 'name': 'AYMARA', 'data' : "AG\x05\x06command=" + command + "#;" }
+    requestform = { 'name': 'AYMARA', 'data' : "AG\x05"+ commandid +"command=" + command + "#;" }
   else:
-    requestform = { 'name': 'AYMARA', 'data' : "AG\x05\x06command=" + command + "#" + param + ";" }
+    requestform = { 'name': 'AYMARA', 'data' : "AG\x05"+ commandid + "command=" + command + "#" + param + ";" }
     
   
   forms = [ticketform, dacform, requestform]
   
   contenttype, formdata = getFormData( forms )
   
-  #connection.set_debuglevel(9)
+  
   headers = {"User-Agent": useragent, "Content-Type" : contenttype, "Accept" : "*/*"}
   connection = httplib.HTTPSConnection(server)
+  #connection.set_debuglevel(9)
   connection.request("POST", "/gate/dungeongate.php", formdata, headers)
   response = connection.getresponse()
+  data = response.read()
   connection.close()
-  return parseMeta(response.read())
+  return parseMeta(data)
 
 if not quickConnect:
   # check for new version, we dont care about the result , but need to do this to look like a "real" client
@@ -469,17 +484,18 @@ def getFile ( path, destfile,modtime=None ):
 def listFileTreeRemote(path):
   fulllist = dict()
   details = listFiles(path)
-  for detail in details:
-    if detail[0] == "F" or detail[0] == "AG\x05\x05F":
-      rawpath = os.path.join(path, detail[1])
-      filepath = rawpath[len(path):len(rawpath)]
-      itemdetails = {"filesize": int(detail[2]), "modified" : detail[4]}
-      fulllist[filepath] = itemdetails
-    else:
-      subitems = listFileTreeRemote(os.path.join(path, detail[1]))
-      for subitemkey in subitems.keys():
-	subitem = subitems[subitemkey]
-	fulllist[subitemkey] = subitem
+  if len(details[0]) > 1:
+    for detail in details:
+      if detail[0] == "F" or detail[0] == "AG\x05\x05F":
+	rawpath = os.path.join(path, detail[1])
+	filepath = rawpath[len(path):len(rawpath)]
+	itemdetails = {"filesize": int(detail[2]), "modified" : detail[4]}
+	fulllist[filepath] = itemdetails
+      else:
+	subitems = listFileTreeRemote(os.path.join(path, detail[1]))
+	for subitemkey in subitems.keys():
+	  subitem = subitems[subitemkey]
+	  fulllist[subitemkey] = subitem
   return fulllist
   
 def listFileTreeLocal(localpath):
@@ -553,6 +569,10 @@ if __name__ == '__main__':
       sys.exit(0)
       
       
+    if args[0] == "listbackups":
+      print listBackups()
+      sys.exit(0)
+      
     if args[0] == "list":
       path = "/"
       if len(args) > 1:
@@ -575,6 +595,12 @@ if __name__ == '__main__':
       else:
 	print "Unable to fetch file"
 	sys.exit(1)
+	
+    if args[0] == "createbackup":
+      backupname = args[1]
+      print addBackup(backupname)
+      sys.exit(0)
+      
       
     if args[0] == "sync":
       sync(args[1], args[2])
