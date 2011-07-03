@@ -13,7 +13,10 @@ class EventHandler(pyinotify.ProcessEvent):
 	  print "create", event.pathname
 	  backup.uploadMultipleFiles(event.pathname, backup.remotepath)
 	else:
-	  print "create", event
+	  # upload symlink, close write doesnt catch this
+	  if os.path.islink( event.pathname ):
+	    backup.uploadMultipleFiles(event.pathname, backup.remotepath)
+	    
 
     def process_IN_DELETE(self, event):
 	print "remove", event.pathname

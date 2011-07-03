@@ -322,8 +322,10 @@ def uploadFile ( filepath, path="/" ) :
     
     filename = os.path.basename(filepath)
     filehandle = open(filepath)
-    filecontents = filehandle.read()
-    sha1 = hashlib.sha1( filecontents ).hexdigest().upper()
+    print "Hashing"
+    sha1 = hashlib.sha1( filehandle.read() ).hexdigest().upper()
+    filehandle.seek(0)
+    print "Hashing done"
 
     # get new auth token if time expired
     if tokenexpiry < time.time():
@@ -347,7 +349,7 @@ def uploadFile ( filepath, path="/" ) :
     option9 = { 'name': 'option9', 'data' : "" }
     param1 = { 'name': 'param1', 'data' : path }
     param2 = { 'name': 'param2', 'data' : filename }
-    filedetail = { 'name': 'file', 'data' : "Content-Type: " + contenttypetext + "\r\n\r\n" + filecontents , 'filename' : filename }
+    filedetail = { 'name': 'file', 'data' : "Content-Type: " + contenttypetext + "\r\n\r\n" + filehandle.read() , 'filename' : filename }
     
     forms = [ticketform, dacform,requestform, commandform, init, option1, option10,option2, option3, option4, option5, option6, option7, option8, option9, param1, param2, filedetail]
     
