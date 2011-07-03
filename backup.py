@@ -1,5 +1,5 @@
 #! /usr/bin/python
-import httplib, urllib, sys, mimetools,re, os, pickle, time, socket, hashlib, ConfigParser, getopt, mimetypes
+import httplib, urllib, sys, mimetools,re, os, pickle, time, socket, hashlib, ConfigParser, getopt, mimetypes, datetime
 
 # setup paths
 global tokenexpiry, workstation_id, workstation_name
@@ -397,7 +397,7 @@ def listFiles ( path="/" ):
     details.append( line.split("|") )
   return details
 
-def getFile ( path, destfile ):
+def getFile ( path, destfile,modtime=None ):
   global tokenexpiry, token
   
   # get new auth token if time expired
@@ -411,10 +411,17 @@ def getFile ( path, destfile ):
     if not os.path.exists(destfile):
       os.makedirs(destfile)
     for detail in details:
-      getFile(os.path.join(path,detail[1]), os.path.join(destfile, detail[1]))
+      # convert time supplied to unix time
+      timestamp = datetime.datetime.strptime(detail[4], "%Y-%m-%d %H:%M:%S")
+      modtime = timestamp.strftime("%s")
+    
+      getFile(os.path.join(path,detail[1]), os.path.join(destfile, detail[1]), int(modtime))
     return
+    
+  if modtime == None:
+    # fetch modification time
+    print "Here"
   print "Putting", path, "to",destfile
-  
   dacform = { 'name': 'DUNGEONDEVICE', 'data': dac }
   ticketform = { 'name': 'DUNGEONTICKET', 'data': token }
   requestform = { 'name': 'AYMARA', 'data' : "AG\x05\x06" }
@@ -444,6 +451,7 @@ def getFile ( path, destfile ):
     writefile = open(destfile,"w")
     writefile.write( responsecontent )
     writefile.close()
+    os.utime(destfile,(time.time(), modtime))
     
     return True
   else:
