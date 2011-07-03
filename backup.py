@@ -107,6 +107,8 @@ def getFormData ( forms ) :
 
 def authenticate( username, password, backup ):
   global tokenexpiry, token
+  token = "unset"
+  print "Authenticating"
   
   # check for existing token
   if os.path.exists( tokenfile ):
@@ -145,7 +147,14 @@ def authenticate( username, password, backup ):
   if "session" not in results:
     if "label" in results:
       print "Failed to login: " + results["label"]
-      return None
+      if results["label"] == "INVALID_BACKUP_POINT":
+	# new backup, create one
+	token = authenticate( username, password, '' )
+	addBackup( backup )
+	return authenticate( username, password, backup )
+	
+      else:
+	return None
     else:
       print "Failed to login, unknown error"
       return None
