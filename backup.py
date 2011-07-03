@@ -172,9 +172,13 @@ def doTicket( command , param=None ):
   
   commandid = "\x05"
   
-  if command in [ "LSMYBACKUPS", "ADDBACKUP" ]:
+  if command in [ "LSMYBACKUPS", "ADDBACKUP", "REMOVEBACKUP" ]:
     commandid = "\b"
   
+  
+  if command in [ "DELETE" ]:
+    commandid = "\x06"
+    
   if param == None:
     requestform = { 'name': 'AYMARA', 'data' : "AG\x05"+ commandid +"command=" + command + "#;" }
   else:
@@ -232,8 +236,11 @@ def parseMeta( metadata ):
       resultdata[count] = {}
     
     resultdata[count][varname] = varvalue
-      
-  return resultdata
+  
+  if len(resultdata[0]) > 0:
+    return resultdata
+  else:
+    return metadata
 
 def listBackups():
   return doTicket("LSMYBACKUPS")
@@ -264,6 +271,15 @@ def generateMeta ( param, params, param2 = False, params2 = False ):
 def addBackup( name ):
   global workstation_id, workstation_name
   return doTicket("ADDBACKUP", generateMeta( "backup_name", { "backup_name" : name,
+					       "workstation_id" : workstation_id, 
+					       "workstation_name" : workstation_name } , 
+					       "session_name", 
+					       { "session_name" : "user",
+					       "notification" : 1 } ) )
+
+def deleteBackup( name ):
+  global workstation_id, workstation_name
+  return doTicket("REMOVEBACKUP", generateMeta( "backup_name", { "backup_name" : name,
 					       "workstation_id" : workstation_id, 
 					       "workstation_name" : workstation_name } , 
 					       "session_name", 
@@ -354,9 +370,12 @@ def deleteFiles ( ids ):
       first = False
     if id[0] == "AG\x05\x05F":
       id[0] = "F"
+    if id[0] == "AG\x05\x05D":
+      id[0] = "D"
     details += str(len(str(id[6]))) + "|" + str(id[6])
     detail2 += str(len(id[0])) + "|"+ id[0] + "|"
   fullcommand = details + detail2 + '#'
+  print fullcommand
   return doTicket("DELETE", fullcommand)
 
 def deleteFileByPath ( filepath, path="/" ):
@@ -599,6 +618,11 @@ if __name__ == '__main__':
     if args[0] == "createbackup":
       backupname = args[1]
       print addBackup(backupname)
+      sys.exit(0)
+      
+    if args[0] == "deletebackup":
+      backupname = args[1]
+      print deleteBackup(backupname)
       sys.exit(0)
       
       
