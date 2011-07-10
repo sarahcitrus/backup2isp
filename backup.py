@@ -1,5 +1,5 @@
 #! /usr/bin/python
-import httplib, urllib, sys, mimetools,re, os, pickle, time, socket, hashlib, ConfigParser, getopt, mimetypes, datetime
+import httplib, urllib, sys, mimetools,re, os, pickle, time, socket, hashlib, ConfigParser, getopt, mimetypes, datetime, mmap
 
 # setup paths
 global tokenexpiry, workstation_id, workstation_name
@@ -83,7 +83,7 @@ def ping ( ):
   connection.close()
 
 # had to implement this myself, as urllib doesnt cope with multiple forms in one post well, and server does silly things
-def getFormData ( forms ) :
+def getFormData ( forms, finishContent = True ) :
   CRLF = '\r\n'
   formparts = []
   boundary =  mimetools.choose_boundary()
@@ -96,13 +96,14 @@ def getFormData ( forms ) :
       formparts.append("Content-Disposition: form-data; name=\"" + form['name'] +"\"\r\n")
     formparts.append(form['data'])
    
-  formparts.append("------------------------------" + boundary + "--")
+  if finishContent:
+    formparts.append("------------------------------" + boundary + "--")
   
   formdata = CRLF.join(formparts)
    
   contenttype = "multipart/form-data; boundary=----------------------------" + boundary
    
-  return contenttype, formdata
+  return contenttype, formdata, boundary
 
 
 def authenticate( username, password, backup ):
@@ -133,7 +134,7 @@ def authenticate( username, password, backup ):
   
   forms = [dacform, authform]
   
-  contenttype, formdata = getFormData( forms )
+  contenttype, formdata, boundary = getFormData( forms )
   
   #connection.set_debuglevel(9)
   headers = {"User-Agent": useragent, "Content-Type" : contenttype, "Accept" : "*/*"}
@@ -196,7 +197,7 @@ def doTicket( command , param=None ):
   
   forms = [ticketform, dacform, requestform]
   
-  contenttype, formdata = getFormData( forms )
+  contenttype, formdata, boundary = getFormData( forms )
   
   
   headers = {"User-Agent": useragent, "Content-Type" : contenttype, "Accept" : "*/*"}
@@ -322,10 +323,16 @@ def uploadFile ( filepath, path="/" ) :
     
     filename = os.path.basename(filepath)
     filehandle = open(filepath)
-    print "Hashing"
-    sha1 = hashlib.sha1( filehandle.read() ).hexdigest().upper()
+    
+    sha1hash = hashlib.sha1();
+    while True:
+      buf = filehandle.read(0x100000)
+      if not buf:
+	  break
+      sha1hash.update(buf)
+    
+    sha1 = sha1hash.hexdigest().upper()
     filehandle.seek(0)
-    print "Hashing done"
 
     # get new auth token if time expired
     if tokenexpiry < time.time():
@@ -349,20 +356,22 @@ def uploadFile ( filepath, path="/" ) :
     option9 = { 'name': 'option9', 'data' : "" }
     param1 = { 'name': 'param1', 'data' : path }
     param2 = { 'name': 'param2', 'data' : filename }
-    filedetail = { 'name': 'file', 'data' : "Content-Type: " + contenttypetext + "\r\n\r\n" + filehandle.read() , 'filename' : filename }
     
+    filesize = os.path.getsize(filepath)
+    filedetail = { 'name': 'file', 'data' : "Content-Type: " + contenttypetext + "\r\n\r\n" + filehandle.read(), 'filename' : filename }
     forms = [ticketform, dacform,requestform, commandform, init, option1, option10,option2, option3, option4, option5, option6, option7, option8, option9, param1, param2, filedetail]
     
-    contenttype, formdata = getFormData( forms )
+    contenttype, formdata, boundary = getFormData( forms )
     
     connection = httplib.HTTPSConnection(server)
     #connection.set_debuglevel(9)
     headers = {"User-Agent": useragent, "Content-Type" : contenttype, "Accept" : "*/*"}
     connection.request("POST", "/gate/dungeongate.php", formdata, headers)
     response = connection.getresponse()
+    responsedata = response.read()
     connection.close()
     print "Uploaded" , filepath, "to", path
-    return response.read()
+    return responsedata
   except Exception as error:
     print error
   filehandle.close()
@@ -428,7 +437,7 @@ def listFiles ( path="/" ):
   
   forms = [ticketform, commandform, dacform, requestform, initform, option1, option2, param1]
   
-  contenttype, formdata = getFormData( forms )
+  contenttype, formdata, boundary = getFormData( forms )
   
   #connection.set_debuglevel(9)
   headers = {"User-Agent": useragent, "Content-Type" : contenttype, "Accept" : "*/*"}
@@ -490,7 +499,7 @@ def getFile ( path, destfile,modtime=None ):
   
   forms = [ticketform, commandform, dacform, requestform, initform, param1, param2]
   
-  contenttype, formdata = getFormData( forms )
+  contenttype, formdata, boundary = getFormData( forms )
   
   
   #connection.set_debuglevel(9)
