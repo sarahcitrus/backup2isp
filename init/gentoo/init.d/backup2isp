@@ -1,0 +1,29 @@
+#!/sbin/runscript
+# Copyright 1999-2011 Gentoo Foundation
+# Distributed under the terms of the GNU General Public License v2
+
+opts="setup logout" 
+
+depend() {
+	need net
+}
+
+start() {
+	ebegin "Starting Backup service"
+	start-stop-daemon --start --quiet -m --pidfile /var/run/backup2isp.pid \
+		--background -i --exec /usr/lib/backup2isp/main.py
+	eend $?
+}
+
+stop() {
+        ebegin "Stopping Backup service"
+        start-stop-daemon --stop --quiet --pidfile /var/run/backup2isp.pid
+        eend $?
+}
+
+setup() {
+	ebegin "Setting up Backup service"
+	/usr/lib/backup2isp/main.py setup
+	eend $?
+}
+
