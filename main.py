@@ -3,7 +3,7 @@
 import pyinotify, json, os, commands, backup, sys, signal
 
 wm = pyinotify.WatchManager()  # Watch Manager
-mask = pyinotify.IN_DELETE | pyinotify.IN_CREATE | pyinotify.IN_CLOSE_WRITE  # watched events
+mask = pyinotify.IN_DELETE | pyinotify.IN_CREATE | pyinotify.IN_CLOSE_WRITE | pyinotify.IN_MOVED_TO  # watched events
 localwatches = []
 
 class EventHandler(pyinotify.ProcessEvent):
@@ -32,9 +32,12 @@ class EventHandler(pyinotify.ProcessEvent):
 	  print "remove", event.pathname
 	  #backup.deleteFileByPath(event.pathname, backup.remotepath)
 	  print "Not deleting remotely"
+	  
+    def process_IN_MOVED_TO(self, event):
+	print "moved to ", event.pathname
+	backup.uploadMultipleFiles(event.pathname, backup.remotepath)
 
 notifier = pyinotify.ThreadedNotifier(wm, EventHandler())
-mask = pyinotify.IN_DELETE | pyinotify.IN_CREATE | pyinotify.IN_CLOSE_WRITE 
 wdd = wm.add_watch(backup.syncpath, mask)
 notifier.start()
 print "Now watching", backup.syncpath
