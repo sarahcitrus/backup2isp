@@ -332,7 +332,6 @@ def uploadFile ( filepath, path="/" ) :
       sha1hash.update(buf)
     
     sha1 = sha1hash.hexdigest().upper()
-    filehandle.seek(0)
 
     # get new auth token if time expired
     if tokenexpiry < time.time():
@@ -358,22 +357,37 @@ def uploadFile ( filepath, path="/" ) :
     param2 = { 'name': 'param2', 'data' : filename }
     
     filesize = os.path.getsize(filepath)
-    filedetail = { 'name': 'file', 'data' : "Content-Type: " + contenttypetext + "\r\n\r\n" + filehandle.read(), 'filename' : filename }
+    filedetail = { 'name': 'file', 'data' : "Content-Type: " + contenttypetext + "\r\n\r\n", 'filename' : filename }
     forms = [ticketform, dacform,requestform, commandform, init, option1, option10,option2, option3, option4, option5, option6, option7, option8, option9, param1, param2, filedetail]
     
-    contenttype, formdata, boundary = getFormData( forms )
+    contenttype, formdata, boundary = getFormData( forms, False )
     
     connection = httplib.HTTPSConnection(server)
     #connection.set_debuglevel(9)
-    headers = {"User-Agent": useragent, "Content-Type" : contenttype, "Accept" : "*/*"}
-    connection.request("POST", "/gate/dungeongate.php", formdata, headers)
+    finalstring = "\r\n------------------------------" + boundary + "--"
+    headers = {"User-Agent": useragent, "Content-Type" : contenttype, "Accept" : "*/*", "Content-Length": len( formdata ) + filesize + len(finalstring) }
+    connection.putrequest("POST", "/gate/dungeongate.php")
+    for item in headers.keys():
+      connection.putheader( item, headers[item] )
+    connection.endheaders()
+    connection.send(formdata)
+    
+    filehandle.seek(0)
+    while True:
+      buf = filehandle.read(0x100000)
+      if not buf:
+	  break
+      connection.send( buf )
+    
+    connection.send(finalstring)
+    
     response = connection.getresponse()
     responsedata = response.read()
     connection.close()
     print "Uploaded" , filepath, "to", path
     return responsedata
   except Exception as error:
-    print error
+    print "Error:",error
   filehandle.close()
   return False
 
