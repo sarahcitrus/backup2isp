@@ -185,7 +185,7 @@ def doTicket( command , param=None ):
   
   commandid = "\x05"
   
-  if command in [ "LSMYBACKUPS", "ADDBACKUP", "REMOVEBACKUP" ]:
+  if command in [ "LSMYBACKUPS", "ADDBACKUP", "REMOVEBACKUP", "VIEWCONFIGURATION", "LICENSEINFO" ]:
     commandid = "\b"
   
   
@@ -602,6 +602,14 @@ if __name__ == '__main__':
     
     if args[0] == "versioncheck":
 	print versionCheck()
+	sys.exit(0)
+
+    if args[0] == "viewconfiguration":
+	print doTicket("VIEWCONFIGURATION")
+	sys.exit(0)
+
+    if args[0] == "licenseinfo":
+	print doTicket("LICENSEINFO")
 	sys.exit(0)
       
     if args[0] == "upload":
