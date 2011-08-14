@@ -63,11 +63,14 @@ def versionCheck ( ):
   connection = httplib.HTTPSConnection(server)
   connection.request("GET", "/gate/checkme.php", {}, headers)
   response = connection.getresponse()
-  if ( response.read() != 'CUR' ):
-    print "Server says we are not running latest version"
+  data = ""
+  responsedata = response.read()
+  if ( responsedata != 'CUR' ):
+    data = "Not latest version: " + responsedata
   else:
-    print "Latest version useragent"
+    data = "Latest version: " + responsedata
   connection.close()
+  return data
 
 def ping ( ):
   headers = {"User-Agent": useragent}
@@ -596,6 +599,10 @@ if __name__ == '__main__':
     if len(args) == 0:
       print "Use one of these commands: upload delete list download"
       sys.exit(2)
+    
+    if args[0] == "versioncheck":
+	print versionCheck()
+	sys.exit(0)
       
     if args[0] == "upload":
       if len(args) < 2:
