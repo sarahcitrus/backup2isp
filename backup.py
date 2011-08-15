@@ -524,18 +524,24 @@ def getFile ( path, destfile,modtime=None ):
   connection = httplib.HTTPSConnection(server)
   connection.request("POST", "/gate/dungeongate.php", formdata, headers)
   response = connection.getresponse()
+
+  writefile = None
+  while True:
+    buf = response.read(0x10000)
+    if buf[0:5] == "ERROR":
+        return False
+    if not buf:
+	break
+    if writefile == None:
+      writefile = open(destfile,"w")
+    writefile.write( buf )
   
-  responsecontent = response.read()
+  writefile.close()
+  os.utime(destfile,(time.time(), modtime))
+  
   connection.close()
-  if responsecontent[0:5] != "ERROR":
-    writefile = open(destfile,"w")
-    writefile.write( responsecontent )
-    writefile.close()
-    os.utime(destfile,(time.time(), modtime))
     
-    return True
-  else:
-    return False
+  return True
 
 def listFileTreeRemote(path, originalpath):
   fulllist = dict()
