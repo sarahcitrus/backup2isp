@@ -13,7 +13,7 @@ class Systray(QtGui.QWidget):
 
    def createActions(self):
        self.quitAction = QtGui.QAction(self.tr("&Quit"), self)
-       QtCore.QObject.connect(self.quitAction, QtCore.SIGNAL("triggered()"), self.confirmQuit) 
+       QtCore.QObject.connect(self.quitAction, QtCore.SIGNAL("triggered()"), self.confirmQuit)
        
    def createTrayIcon(self):
        self.trayIconMenu = QtGui.QMenu(self)
@@ -22,14 +22,20 @@ class Systray(QtGui.QWidget):
        self.trayIcon = QtGui.QSystemTrayIcon(self)
        self.trayIcon.setIcon(QtGui.QIcon("/usr/share/pixmaps/monitor.png"))
        self.trayIcon.setContextMenu(self.trayIconMenu) 
+       self.trayIcon.connect(self.trayIcon, QtCore.SIGNAL("activated(QSystemTrayIcon::ActivationReason)"), self.toggleMainWindow)
+
+       
+   def toggleMainWindow(self, reason):
+       if reason == QtGui.QSystemTrayIcon.Trigger:
+	  if mainwin.isVisible():
+	    mainwin.hide()
+	  else:
+	    mainwin.show()
       
    def confirmQuit(self):
        result = KMessageBox.questionYesNo(None, "Really quit?")
        if result == KMessageBox.Yes:
-	print "Quitting"
 	app.quit()
-       else:
-	print "Not quitting"
        
        # closing this terminates the program
        
