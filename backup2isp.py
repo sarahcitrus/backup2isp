@@ -1,23 +1,39 @@
 #! /usr/bin/python
-
 import sys
+from PyKDE4.kdeui import KApplication, KMainWindow, KMessageBox
+from PyKDE4.kdecore import KCmdLineArgs, ki18n, KAboutData
+from PyQt4 import QtCore, QtGui
 
-from PyKDE4.kdeui import KNotification, KSystemTrayIcon, KIcon, KStandardAction, KToggleAction, KApplication, KMenu, KMessageBox, KStandardGuiItem
-from PyKDE4.kdecore import ki18n, KAboutData, KCmdLineArgs
-from PyQt4.QtCore import SIGNAL, QObject
-from PyQt4 import QtGui
-from PyQt4 import QtCore
- 
+class Systray(QtGui.QWidget):
+   def __init__(self):
+       QtGui.QWidget.__init__(self)
+       self.createActions()
+       self.createTrayIcon()
+       self.trayIcon.show()
 
-def confirmClose():
-  response = KMessageBox.questionYesNo(None, "Really quit?", "test", KStandardGuiItem.yes(), KStandardGuiItem.cancel() )
-  if response == 3:
-    print "Yes"
-    return True
-  else:
-    print "No"
-    return False
+   def createActions(self):
+       self.quitAction = QtGui.QAction(self.tr("&Quit"), self)
+       QtCore.QObject.connect(self.quitAction, QtCore.SIGNAL("triggered()"), self.confirmQuit) 
+       
+   def createTrayIcon(self):
+       self.trayIconMenu = QtGui.QMenu(self)
+       self.trayIconMenu.addAction(self.quitAction)
 
+       self.trayIcon = QtGui.QSystemTrayIcon(self)
+       self.trayIcon.setIcon(QtGui.QIcon("/usr/share/pixmaps/monitor.png"))
+       self.trayIcon.setContextMenu(self.trayIconMenu) 
+      
+   def confirmQuit(self):
+       result = KMessageBox.questionYesNo(None, "Really quit?")
+       if result == KMessageBox.Yes:
+	print "Quitting"
+	app.quit()
+       else:
+	print "Not quitting"
+       
+       # closing this terminates the program
+       
+       
 appName     = "Backup2isp"
 catalog     = ""
 programName = ki18n ("Backup2isp")
@@ -28,26 +44,12 @@ copyright   = ki18n ("(c) 2011 Anonymous")
 text        = ki18n ("ISP Backup software")
 homePage    = "https://github.com/sarahcitrus/backup2isp"
 bugEmail    = ""
- 
+
 aboutData   = KAboutData (appName, catalog, programName, version, description,
                         license, copyright, text, homePage, bugEmail)
 
 KCmdLineArgs.init (sys.argv, aboutData)
- 
 app = KApplication ()
-
-ICON_FILE = "/usr/share/pixmaps/monitor.png"
-icon = KSystemTrayIcon(ICON_FILE)
-icon.setToolTip("Running")
-
-menu = QtGui.QMenu()
-exitAction = QtGui.QAction(QtGui.QIcon(":/icons/icons/exit.png"), (u"Exit"), None)
-
-QtCore.QObject.connect(exitAction, QtCore.SIGNAL("triggered(bool)"), confirmClose)
-menu.addAction(exitAction)
-icon.setContextMenu(menu)
-
-icon.show()
-
-#Start the evnt loop
+mainwin = KMainWindow()
+tray = Systray()
 sys.exit(app.exec_())
