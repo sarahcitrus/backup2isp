@@ -82,6 +82,7 @@ class Steek:
     # metadata, parse
     resultdata = {}
     pos = 0
+    responsetype = metadata[ metadata.find("=")+1 : metadata.find("#") ]
     metadata = metadata[ metadata.find("#")+1: len(metadata) ]
     strlen = len( metadata )
     prog = re.compile("(.*?)=(\d+)\|")
@@ -106,9 +107,9 @@ class Steek:
       resultdata[count][varname] = varvalue
     
     if len(resultdata[0]) > 0:
-      return resultdata
+      return responsetype, resultdata
     else:
-      return metadata
+      return responsetype,metadata
       
       
   def getFormData ( self, forms, finishContent = True ) :

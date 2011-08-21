@@ -41,7 +41,17 @@ class Systray(QtGui.QWidget):
        # closing this terminates the program
        
 
-
+class BackupLocationWindow(QtGui.QWidget):
+    
+    def __init__(self):
+        super(BackupLocationWindow, self).__init__()
+        
+        self.initUI()
+    
+    def initUI(self):
+	pass
+    
+    
 class LoginWindow(QtGui.QWidget):
     
     loginButton = False
@@ -53,12 +63,18 @@ class LoginWindow(QtGui.QWidget):
         super(LoginWindow, self).__init__()
         
         self.initUI()
-        
+    
     def loginSubmit(self):
 	self.loginButton.setEnabled(False)
 	
 	backupInstance = Provider.getInstance( self.providerBox.currentText() )
-	backupInstance.login( str(self.usernameEdit.text()), str(self.passwordEdit.text()) )
+	resulttype, result = backupInstance.login( str(self.usernameEdit.text()), str(self.passwordEdit.text()) )
+	if resulttype != "ERROR":
+	  # success
+	  self.hide()
+	  choosebackuplocation.show()
+	else:
+	  KMessageBox.error(None, result[0]['message'])
 	
 	self.loginButton.setEnabled(True)
         
@@ -120,6 +136,8 @@ kmainwin = KMainWindow()
 
 mainwin = LoginWindow()
 mainwin.show()
+
+choosebackuplocation = BackupLocationWindow()
 
 tray = Systray()
 sys.exit(app.exec_())
