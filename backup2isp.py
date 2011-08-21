@@ -1,5 +1,6 @@
 #! /usr/bin/python
 import sys
+from provider import Provider
 from PyKDE4.kdeui import KApplication, KMainWindow, KMessageBox
 from PyKDE4.kdecore import KCmdLineArgs, ki18n, KAboutData
 from PyQt4 import QtCore, QtGui
@@ -42,43 +43,62 @@ class Systray(QtGui.QWidget):
 
 
 class LoginWindow(QtGui.QWidget):
-  
+    
+    loginButton = False
+    providerBox = False
+    usernameEdit = False
+    passwordEdit = False
+    
     def __init__(self):
         super(LoginWindow, self).__init__()
         
         self.initUI()
+        
+    def loginSubmit(self):
+	self.loginButton.setEnabled(False)
+	
+	backupInstance = Provider.getInstance( self.providerBox.currentText() )
+	backupInstance.login( str(self.usernameEdit.text()), str(self.passwordEdit.text()) )
+	
+	self.loginButton.setEnabled(True)
         
     def initUI(self):
         
         username = QtGui.QLabel('Username')
         password = QtGui.QLabel('Password')
 
-        providerBox = QtGui.QComboBox()
-        providerBox.addItem('Virgin Media');
+        self.providerBox = QtGui.QComboBox()
+        self.providerBox.addItem('Virgin Media');
         
-        usernameEdit = QtGui.QLineEdit()
-        passwordEdit = QtGui.QLineEdit()
-        passwordEdit.setEchoMode(QtGui.QLineEdit.Password)
-        loginButton = QtGui.QPushButton('Login')
+        self.usernameEdit = QtGui.QLineEdit()
+        self.passwordEdit = QtGui.QLineEdit()
+        self.passwordEdit.setEchoMode(QtGui.QLineEdit.Password)
+        self.loginButton = QtGui.QPushButton('Login')
 
         grid = QtGui.QHBoxLayout()
         grid.addStretch(1)
 
-        grid.addWidget(providerBox)
+        grid.addWidget(self.providerBox)
         grid.addWidget(username)
-        grid.addWidget(usernameEdit)
+        grid.addWidget(self.usernameEdit)
 
         grid.addWidget(password)
-        grid.addWidget(passwordEdit)
+        grid.addWidget(self.passwordEdit)
         
         
-        grid.addWidget(loginButton)
+        grid.addWidget(self.loginButton)
+        
+        self.usernameEdit.connect(self.usernameEdit, QtCore.SIGNAL("returnPressed()"), self.loginSubmit)
+        self.passwordEdit.connect(self.passwordEdit, QtCore.SIGNAL("returnPressed()"), self.loginSubmit)
+        self.loginButton.connect(self.loginButton, QtCore.SIGNAL("clicked()"), self.loginSubmit)
         
         self.setLayout(grid)
         
         self.setWindowTitle("Backup2isp Login")
         self.show()
         self.move( KApplication.desktop().screen().rect().center() - self.rect().center() )
+
+backupInstance = False
 
 appName     = "Backup2isp"
 catalog     = ""
