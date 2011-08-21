@@ -20,7 +20,7 @@ class Systray(QtGui.QWidget):
        self.trayIconMenu.addAction(self.quitAction)
 
        self.trayIcon = QtGui.QSystemTrayIcon(self)
-       self.trayIcon.setIcon(QtGui.QIcon("/usr/share/pixmaps/monitor.png"))
+       self.trayIcon.setIcon(QtGui.QIcon("icon.svg"))
        self.trayIcon.setContextMenu(self.trayIconMenu) 
        self.trayIcon.connect(self.trayIcon, QtCore.SIGNAL("activated(QSystemTrayIcon::ActivationReason)"), self.toggleMainWindow)
 
@@ -39,7 +39,47 @@ class Systray(QtGui.QWidget):
        
        # closing this terminates the program
        
-       
+
+
+class LoginWindow(QtGui.QWidget):
+  
+    def __init__(self):
+        super(LoginWindow, self).__init__()
+        
+        self.initUI()
+        
+    def initUI(self):
+        
+        username = QtGui.QLabel('Username')
+        password = QtGui.QLabel('Password')
+
+        providerBox = QtGui.QComboBox()
+        providerBox.addItem('Virgin Media');
+        
+        usernameEdit = QtGui.QLineEdit()
+        passwordEdit = QtGui.QLineEdit()
+        passwordEdit.setEchoMode(QtGui.QLineEdit.Password)
+        loginButton = QtGui.QPushButton('Login')
+
+        grid = QtGui.QHBoxLayout()
+        grid.addStretch(1)
+
+        grid.addWidget(providerBox)
+        grid.addWidget(username)
+        grid.addWidget(usernameEdit)
+
+        grid.addWidget(password)
+        grid.addWidget(passwordEdit)
+        
+        
+        grid.addWidget(loginButton)
+        
+        self.setLayout(grid)
+        
+        self.setWindowTitle("Backup2isp Login")
+        self.show()
+        self.move( KApplication.desktop().screen().rect().center() - self.rect().center() )
+
 appName     = "Backup2isp"
 catalog     = ""
 programName = ki18n ("Backup2isp")
@@ -56,6 +96,10 @@ aboutData   = KAboutData (appName, catalog, programName, version, description,
 
 KCmdLineArgs.init (sys.argv, aboutData)
 app = KApplication ()
-mainwin = KMainWindow()
+kmainwin = KMainWindow()
+
+mainwin = LoginWindow()
+mainwin.show()
+
 tray = Systray()
 sys.exit(app.exec_())
