@@ -308,9 +308,9 @@ def uploadMultipleFiles ( localpath, remotepath="/" ):
 	  remotedest = root.replace( localpath, "" )
 	  destdir = (remotepath + remotedest).replace("//", "/")
 	  
-	  print "Uploading", os.path.join(root, name), "to", destdir
+	  #print "Uploading", os.path.join(root, name), "to", destdir
 	  uploadFile( os.path.join(root, name), destdir )
-	  print "Done"
+	  #print "Done"
   return True
 
 def uploadFile ( filepath, path="/" ) :
