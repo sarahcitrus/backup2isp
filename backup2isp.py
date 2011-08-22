@@ -1,6 +1,7 @@
 #! /usr/bin/python
 import sys
 from provider import Provider
+from config import Config
 from PyKDE4.kdeui import KApplication, KMainWindow, KMessageBox
 from PyKDE4.kdecore import KCmdLineArgs, ki18n, KAboutData
 from PyQt4 import QtCore, QtGui
@@ -51,8 +52,23 @@ class BackupLocationWindow(QtGui.QWidget):
     
     def initUI(self):
         
+        self.backupList = QtGui.QTableView()
+        
+        
         global backupInstance
-        print backupInstance.listBackups()
+        response, backups = backupInstance.listBackups()
+        for backup in backups:
+	  print backups[backup]
+        
+        grid = QtGui.QHBoxLayout()
+        grid.addStretch(1)
+        grid.addWidget(self.backupList)
+        self.setLayout(grid)
+        
+        self.setWindowTitle("Backup2isp - Choose Backup")
+        self.show()
+        self.move( KApplication.desktop().screen().rect().center() - self.rect().center() )
+        
     
     
 class LoginWindow(QtGui.QWidget):
@@ -121,8 +137,9 @@ class LoginWindow(QtGui.QWidget):
         self.show()
         self.move( KApplication.desktop().screen().rect().center() - self.rect().center() )
 
-global backupInstance, choosebackuplocation
+global backupInstance, choosebackuplocation, config
 backupInstance = False
+config = Config()
 
 appName     = "Backup2isp"
 catalog     = ""
