@@ -1,4 +1,4 @@
-import httplib, urllib, mimetools, re 
+import httplib, urllib, mimetools, re, time
 
 class Steek:
   
@@ -15,16 +15,22 @@ class Steek:
   def login ( self, username, password ) :
     meta = self.generateMeta( "sso_mode", { 'sso_mode' : self.provider } , 
 		"login", { 'login' : username, 'password' : password } ) + "#"
-    return self.doTicket( self.loginFormName, "LOGIN_BY_SSO", meta )
+    status, results = self.doTicket( "LOGIN_BY_SSO", self.loginFormName, meta )
+    if status == "META":
+      self.token = results[0]["session"]
+      self.tokenexpiry = int(results[0]["duration"]) + int(time.time())
+      
+    return status, results
     
+  def listBackups ( self ) : 
+    return self.doTicket("LSMYBACKUPS",  self.loginFormName)
     
-    
-  def doTicket( self, formName, command , param=None ):
+  def doTicket( self, command, formName="DUNGEONTICKET", param=None ):
     
     dacform = { 'name': self.deviceName, 'data': self.dac }
     ticketform = False
     if self.token:
-      ticketform = { 'name': formName, 'data': self.token }
+      ticketform = { 'name': self.ticketFormName, 'data': self.token }
     
     commandid = "\x05"
     

@@ -22,12 +22,13 @@ class Systray(QtGui.QWidget):
 
        self.trayIcon = QtGui.QSystemTrayIcon(self)
        self.trayIcon.setIcon(QtGui.QIcon("icon.svg"))
-       self.trayIcon.setContextMenu(self.trayIconMenu) 
+       self.trayIcon.setContextMenu(self.trayIconMenu)
        self.trayIcon.connect(self.trayIcon, QtCore.SIGNAL("activated(QSystemTrayIcon::ActivationReason)"), self.toggleMainWindow)
 
        
    def toggleMainWindow(self, reason):
        if reason == QtGui.QSystemTrayIcon.Trigger:
+	  global mainwin
 	  if mainwin.isVisible():
 	    mainwin.hide()
 	  else:
@@ -49,7 +50,9 @@ class BackupLocationWindow(QtGui.QWidget):
         self.initUI()
     
     def initUI(self):
-	pass
+        
+        global backupInstance
+        print backupInstance.listBackups()
     
     
 class LoginWindow(QtGui.QWidget):
@@ -61,18 +64,21 @@ class LoginWindow(QtGui.QWidget):
     
     def __init__(self):
         super(LoginWindow, self).__init__()
-        
         self.initUI()
     
     def loginSubmit(self):
 	self.loginButton.setEnabled(False)
-	
+	global backupInstance
 	backupInstance = Provider.getInstance( self.providerBox.currentText() )
 	resulttype, result = backupInstance.login( str(self.usernameEdit.text()), str(self.passwordEdit.text()) )
 	if resulttype != "ERROR":
 	  # success
 	  self.hide()
+	  
+	  global mainwin, choosebackuplocation
+	  choosebackuplocation = BackupLocationWindow()
 	  choosebackuplocation.show()
+	  mainwin = choosebackuplocation
 	else:
 	  KMessageBox.error(None, result[0]['message'])
 	
@@ -111,9 +117,11 @@ class LoginWindow(QtGui.QWidget):
         self.setLayout(grid)
         
         self.setWindowTitle("Backup2isp Login")
+        self.setFixedSize( 450,40 )
         self.show()
         self.move( KApplication.desktop().screen().rect().center() - self.rect().center() )
 
+global backupInstance, choosebackuplocation
 backupInstance = False
 
 appName     = "Backup2isp"
@@ -134,10 +142,10 @@ KCmdLineArgs.init (sys.argv, aboutData)
 app = KApplication ()
 kmainwin = KMainWindow()
 
-mainwin = LoginWindow()
-mainwin.show()
-
-choosebackuplocation = BackupLocationWindow()
+loginwin = LoginWindow()
+loginwin.show()
+global mainwin
+mainwin = loginwin
 
 tray = Systray()
 sys.exit(app.exec_())
