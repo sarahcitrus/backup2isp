@@ -52,13 +52,16 @@ class BackupLocationWindow(QtGui.QWidget):
     
     def initUI(self):
         
-        self.backupList = QtGui.QTableView()
         
         
         global backupInstance
         response, backups = backupInstance.listBackups()
+        self.backupList = QtGui.QTableWidget(len(backups),1)
+        i=0
         for backup in backups:
-	  print backups[backup]
+	  newitem = QtGui.QTableWidgetItem(backups[backup]["backup_name"])
+	  self.backupList.setItem(i,0,newitem)
+	  i+=1
         
         grid = QtGui.QHBoxLayout()
         grid.addStretch(1)
