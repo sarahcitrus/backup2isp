@@ -49,28 +49,47 @@ class BackupLocationWindow(QtGui.QWidget):
         super(BackupLocationWindow, self).__init__()
         
         self.initUI()
+        
+    def useBackup(self):
+	print "Use backup", self.backupList.currentText()
     
+    def addBackup(self):
+	print "Add backup"
+	
+    def deleteBackup(self):
+	print "Delete backup", self.backupList.currentText()
+	
     def initUI(self):
-        
-        
-        
         global backupInstance
         response, backups = backupInstance.listBackups()
-        self.backupList = QtGui.QTableWidget(len(backups),1)
-        i=0
+        
+        backupTitle = QtGui.QLabel('Backup')
+        self.backupList = QtGui.QComboBox()
+        self.useBackupButton = QtGui.QPushButton('Use')
+        self.addBackupButton = QtGui.QPushButton('Add')
+        self.deleteBackupButton = QtGui.QPushButton('Delete')
+        
+        i=1
         for backup in backups:
-	  newitem = QtGui.QTableWidgetItem(backups[backup]["backup_name"])
-	  self.backupList.setItem(i,0,newitem)
-	  i+=1
+	  self.backupList.addItem(backups[backup]["backup_name"]);
         
         grid = QtGui.QHBoxLayout()
+        grid.addWidget(backupTitle)
         grid.addStretch(1)
         grid.addWidget(self.backupList)
+        grid.addWidget(self.useBackupButton)
+        grid.addWidget(self.addBackupButton)
+        grid.addWidget(self.deleteBackupButton)
         self.setLayout(grid)
         
         self.setWindowTitle("Backup2isp - Choose Backup")
         self.show()
         self.move( KApplication.desktop().screen().rect().center() - self.rect().center() )
+        
+        
+	self.useBackupButton.connect(self.useBackupButton, QtCore.SIGNAL("clicked()"), self.useBackup)
+	self.addBackupButton.connect(self.addBackupButton, QtCore.SIGNAL("clicked()"), self.addBackup)
+	self.deleteBackupButton.connect(self.deleteBackupButton, QtCore.SIGNAL("clicked()"), self.deleteBackup)
         
     
     
