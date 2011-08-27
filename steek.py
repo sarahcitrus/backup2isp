@@ -85,6 +85,14 @@ class Steek:
 						{ "session_name" : "user",
 						"notification" : 1 } ) )
       
+  def addBackup( self, name, workstation_id, workstation_name ):
+    return self.doTicket("ADDBACKUP", self.loginFormName, self.generateMeta( "backup_name", { "backup_name" : name,
+						"workstation_id" : workstation_id, 
+						"workstation_name" : workstation_name } , 
+						"session_name", 
+						{ "session_name" : "user",
+						"notification" : 1 } ) )
+	
   def doTicket( self, command, formName="DUNGEONTICKET", param=None ):
     
     dacform = { 'name': self.deviceName, 'data': self.dac }

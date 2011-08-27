@@ -83,7 +83,18 @@ class BackupLocationWindow(QtGui.QWidget):
 	  KMessageBox.error(None, result[0]['message'])
     
     def addBackup(self):
-	print "Add backup"
+	global backupInstance, config
+	text, result = QtGui.QInputDialog.getText(self, 'Add Backup', 'Backup Name:')
+	if result:
+	  resulttype, result = backupInstance.addBackup( str(text), config.workstation_id, config.workstation_name )
+	  if resulttype != "ERROR":
+	    KMessageBox.information(None, text + ' added.')
+	    self.backupList.addItem(text)
+	  else:
+	    messagetext = result[0]['message']
+	    if messagetext == "":
+	      messagetext = result[0]['label']
+	    KMessageBox.error(None, messagetext)
 	
     def deleteBackup(self):
 	global backupInstance
@@ -95,9 +106,7 @@ class BackupLocationWindow(QtGui.QWidget):
 	    self.backupList.removeItem(self.backupList.currentIndex())
 	  else:
 	    KMessageBox.error(None, result[0]['message'])
-	    
-	  
-	
+
     def event(self, event):
 	if self.firstShow and event.type() == QtCore.QEvent.ActivationChange:
 	  self.firstShow = False
