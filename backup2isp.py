@@ -40,6 +40,9 @@ class Systray(QtGui.QWidget):
        if result == KMessageBox.Yes:
 	app.quit()
        
+       
+class BackupWindow(QtGui.QWidget):
+    pass
 
 class BackupLocationWindow(QtGui.QWidget):
     
@@ -51,9 +54,11 @@ class BackupLocationWindow(QtGui.QWidget):
         self.initUI()
         
     def useBackup(self):
-	print "Use backup", self.backupList.currentText()
-        global backupInstance, config
+        global backupInstance, config, mainwin, backupwin
 	print backupInstance.login( config.username, config.password, self.backupList.currentText() )
+	self.hide()
+	mainwin = backupwin
+	mainwin.show()
     
     def addBackup(self):
 	print "Add backup"
@@ -78,15 +83,12 @@ class BackupLocationWindow(QtGui.QWidget):
         self.addBackupButton = QtGui.QPushButton('Add')
         self.deleteBackupButton = QtGui.QPushButton('Delete')
         
-        print config.backupName,"backup"
-        
         i=1
         self.backupList.addItem("Select Backup")
         for backup in backups:
 	  self.backupList.addItem(backups[backup]["backup_name"]);
 	  # select stored backup
 	  if backups[backup]["backup_name"] == config.backupName:
-	    print "Setting index"
 	    self.backupList.setCurrentIndex(i)
 	  i+=1
         
@@ -212,6 +214,8 @@ app = KApplication ()
 kmainwin = KMainWindow()
 
 loginwin = LoginWindow()
+
+backupwin = BackupWindow()
 global mainwin
 mainwin = loginwin
 
