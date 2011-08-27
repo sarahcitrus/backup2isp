@@ -40,8 +40,6 @@ class Systray(QtGui.QWidget):
        if result == KMessageBox.Yes:
 	app.quit()
        
-       # closing this terminates the program
-       
 
 class BackupLocationWindow(QtGui.QWidget):
     
@@ -54,9 +52,10 @@ class BackupLocationWindow(QtGui.QWidget):
         
     def useBackup(self):
 	print "Use backup", self.backupList.currentText()
+        global backupInstance, config
+	print backupInstance.login( config.username, config.password, self.backupList.currentText() )
     
     def addBackup(self):
-        global backupInstance
 	print "Add backup"
 	
     def deleteBackup(self):
@@ -70,7 +69,7 @@ class BackupLocationWindow(QtGui.QWidget):
 	return super(BackupLocationWindow, self).event(event)
     
     def initUI(self):
-        global backupInstance
+        global backupInstance, config
         response, backups = backupInstance.listBackups()
         
         backupTitle = QtGui.QLabel('Backup')
@@ -79,10 +78,17 @@ class BackupLocationWindow(QtGui.QWidget):
         self.addBackupButton = QtGui.QPushButton('Add')
         self.deleteBackupButton = QtGui.QPushButton('Delete')
         
+        print config.backupName,"backup"
+        
         i=1
         self.backupList.addItem("Select Backup")
         for backup in backups:
 	  self.backupList.addItem(backups[backup]["backup_name"]);
+	  # select stored backup
+	  if backups[backup]["backup_name"] == config.backupName:
+	    print "Setting index"
+	    self.backupList.setCurrentIndex(i)
+	  i+=1
         
         grid = QtGui.QHBoxLayout()
         grid.addWidget(backupTitle)
@@ -121,7 +127,7 @@ class LoginWindow(QtGui.QWidget):
 	self.loginButton.setEnabled(False)
 	global backupInstance, config
 	backupInstance = Provider.getInstance( self.providerBox.currentText(), config )
-	resulttype, result = backupInstance.login( str(self.usernameEdit.text()), str(self.passwordEdit.text()), None )
+	resulttype, result = backupInstance.login( str(self.usernameEdit.text()), str(self.passwordEdit.text()), config.backupName )
 	if resulttype != "ERROR":
 	  # success
 	  self.hide()

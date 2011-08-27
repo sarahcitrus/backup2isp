@@ -3,7 +3,9 @@ import httplib, urllib, mimetools, re, time, os, pickle
 class Steek:
   
   tokenexpiry = 0
+  config = False
   token = False
+  backup = None
   loginFormName = "AYMARA"
   ticketFormName = "DUNGEONTICKET"
   deviceName = 'DUNGEONDEVICE'
@@ -17,7 +19,7 @@ class Steek:
 
   def login ( self, username, password, backup, skipCheck=None ) :
     if skipCheck != True:
-      if username == self.config.username and password == self.config.password:
+      if username == self.config.username and password == self.config.password and backup == self.config.backupName:
 	
 	self.username = username
 	self.password = password
@@ -25,10 +27,13 @@ class Steek:
 	self.getToken()
 	return "META", []
     
-    
     self.username = username
+    self.config.username = username
     self.password = password
+    self.config.password = password
     self.backup = backup
+    self.config.backupName = backup
+    self.config.saveConfig()
     
     self.token = False
     meta = self.generateMeta( "sso_mode", { 'sso_mode' : self.provider } , 
