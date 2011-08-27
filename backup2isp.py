@@ -42,7 +42,26 @@ class Systray(QtGui.QWidget):
        
        
 class BackupWindow(QtGui.QWidget):
-    pass
+  
+    def __init__(self):
+        super(BackupWindow, self).__init__()
+        self.initUI()
+    
+    def manageBackups( self ):
+	global choosebackuplocation
+	choosebackuplocation.show()
+    
+    def initUI(self):
+	self.manageBackupButton = QtGui.QPushButton('Manage Backups')
+        grid = QtGui.QHBoxLayout()
+        grid.addWidget(self.manageBackupButton)
+        self.setLayout(grid)
+        self.setWindowTitle("Backup2isp")
+        self.show()
+        self.move( KApplication.desktop().screen().rect().center() - self.rect().center() )
+	self.manageBackupButton.connect(self.manageBackupButton, QtCore.SIGNAL("clicked()"), self.manageBackups)
+        
+    
 
 class BackupLocationWindow(QtGui.QWidget):
     
@@ -55,10 +74,13 @@ class BackupLocationWindow(QtGui.QWidget):
         
     def useBackup(self):
         global backupInstance, config, mainwin, backupwin
-	print backupInstance.login( config.username, config.password, self.backupList.currentText() )
-	self.hide()
-	mainwin = backupwin
-	mainwin.show()
+	resulttype, result = backupInstance.login( config.username, config.password, self.backupList.currentText() )
+	if resulttype != "ERROR":
+	  self.hide()
+	  mainwin = backupwin
+	  mainwin.show()
+	else:
+	  KMessageBox.error(None, result[0]['message'])
     
     def addBackup(self):
 	print "Add backup"
