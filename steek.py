@@ -79,6 +79,12 @@ class Steek:
     self.getToken()
     return self.doTicket("LSMYBACKUPS",  self.loginFormName)
     
+  def deleteBackup( self, name ):
+    return self.doTicket("REMOVEBACKUP", self.loginFormName, self.generateMeta( "backup_name", { "backup_name" : name } , 
+						"session_name", 
+						{ "session_name" : "user",
+						"notification" : 1 } ) )
+      
   def doTicket( self, command, formName="DUNGEONTICKET", param=None ):
     
     dacform = { 'name': self.deviceName, 'data': self.dac }

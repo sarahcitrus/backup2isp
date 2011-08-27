@@ -52,14 +52,14 @@ class BackupWindow(QtGui.QWidget):
 	choosebackuplocation.show()
     
     def initUI(self):
-	self.manageBackupButton = QtGui.QPushButton('Manage Backups')
+	self.manageBackupButton = QtGui.QPushButton('Manage Backup Volumes')
         grid = QtGui.QHBoxLayout()
         grid.addWidget(self.manageBackupButton)
         self.setLayout(grid)
         self.setWindowTitle("Backup2isp")
-        self.show()
         self.move( KApplication.desktop().screen().rect().center() - self.rect().center() )
 	self.manageBackupButton.connect(self.manageBackupButton, QtCore.SIGNAL("clicked()"), self.manageBackups)
+        self.show()
         
     
 
@@ -86,7 +86,17 @@ class BackupLocationWindow(QtGui.QWidget):
 	print "Add backup"
 	
     def deleteBackup(self):
-	result = KMessageBox.questionYesNo(None, "Really delete backup '" + self.backupList.currentText() + "'?")
+	global backupInstance
+	boxresult = KMessageBox.questionYesNo(None, "Really delete backup '" + self.backupList.currentText() + "'?")
+	if boxresult == KMessageBox.Yes:
+	  resulttype, result = backupInstance.deleteBackup( str(self.backupList.currentText()) )
+	  if result != "ERROR":
+	    KMessageBox.information(None, self.backupList.currentText() + ' deleted.')
+	    self.backupList.removeItem(self.backupList.currentIndex())
+	  else:
+	    KMessageBox.error(None, result[0]['message'])
+	    
+	  
 	
     def event(self, event):
 	if self.firstShow and event.type() == QtCore.QEvent.ActivationChange:
