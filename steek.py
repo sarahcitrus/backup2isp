@@ -1,8 +1,8 @@
-import httplib, urllib, mimetools, re, time
+import httplib, urllib, mimetools, re, time, os, pickle
 
 class Steek:
   
-  tokenexpiry = False
+  tokenexpiry = 0
   token = False
   loginFormName = "AYMARA"
   ticketFormName = "DUNGEONTICKET"
@@ -12,7 +12,25 @@ class Steek:
   dac = 'AGD44cdx56rtt7u8'
   useragent = 'AGBackup-VirginMedia-en_EN-v2.3.1.31082-AGBK_VIRGIN_W-Backup n Storage-WIN_Seven-?-DG'
 
-  def login ( self, username, password ) :
+  def __init__ ( self, config):
+    self.config = config
+
+  def login ( self, username, password, backup, skipCheck=None ) :
+    if skipCheck != True:
+      if username == self.config.username and password == self.config.password:
+	
+	self.username = username
+	self.password = password
+	self.backup = backup
+	self.getToken()
+	return "META", []
+    
+    
+    self.username = username
+    self.password = password
+    self.backup = backup
+    
+    self.token = False
     meta = self.generateMeta( "sso_mode", { 'sso_mode' : self.provider } , 
 		"login", { 'login' : username, 'password' : password } ) + "#"
     status, results = self.doTicket( "LOGIN_BY_SSO", self.loginFormName, meta )
@@ -20,9 +38,40 @@ class Steek:
       self.token = results[0]["session"]
       self.tokenexpiry = int(results[0]["duration"]) + int(time.time())
       
+      f = open(self.config.tokenfile, "w")
+      pickle.dump( ( self.backup, self.tokenexpiry, self.token ) , f)
+      f.close()
+      
     return status, results
+  
+  def getToken ( self ):
+    if not self.token:
     
+      if os.path.exists( self.config.tokenfile ):
+	print "Checking existing token"
+	f = open(self.config.tokenfile, "r")
+	savedbackup, savedtime, savedtoken = pickle.load(f)
+	f.close()
+	if self.backup != savedbackup:
+	  print "Different backup, getting new auth token"
+	  self.login(self.username, self.password, self.backup, True)
+	else:
+	  if savedtime >= time.time():
+	    tokenexpiry = savedtime
+	    self.config.backupName = savedbackup
+	    self.tokenexpiry = savedtime
+	    self.token = savedtoken
+	  else:
+	    print "Token expired"
+	    self.login(self.username, self.password, self.backup, True)
+      else:
+	print "No existing token"
+	self.login(self.username, self.password, self.backup, True)
+    
+    return self.token, self.tokenexpiry
+  
   def listBackups ( self ) : 
+    self.getToken()
     return self.doTicket("LSMYBACKUPS",  self.loginFormName)
     
   def doTicket( self, command, formName="DUNGEONTICKET", param=None ):

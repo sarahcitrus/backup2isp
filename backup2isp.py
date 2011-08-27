@@ -45,20 +45,30 @@ class Systray(QtGui.QWidget):
 
 class BackupLocationWindow(QtGui.QWidget):
     
+    firstShow = True
+    
     def __init__(self):
         super(BackupLocationWindow, self).__init__()
-        
+        self.firstShow = True
         self.initUI()
         
     def useBackup(self):
 	print "Use backup", self.backupList.currentText()
     
     def addBackup(self):
+        global backupInstance
 	print "Add backup"
 	
     def deleteBackup(self):
-	print "Delete backup", self.backupList.currentText()
+	result = KMessageBox.questionYesNo(None, "Really delete backup '" + self.backupList.currentText() + "'?")
 	
+    def event(self, event):
+	if self.firstShow and event.type() == QtCore.QEvent.ActivationChange:
+	  self.firstShow = False
+	  if ( self.backupList.currentText() != "Select Backup" ):
+	    self.useBackup()
+	return super(BackupLocationWindow, self).event(event)
+    
     def initUI(self):
         global backupInstance
         response, backups = backupInstance.listBackups()
@@ -70,6 +80,7 @@ class BackupLocationWindow(QtGui.QWidget):
         self.deleteBackupButton = QtGui.QPushButton('Delete')
         
         i=1
+        self.backupList.addItem("Select Backup")
         for backup in backups:
 	  self.backupList.addItem(backups[backup]["backup_name"]);
         
@@ -99,16 +110,18 @@ class LoginWindow(QtGui.QWidget):
     providerBox = False
     usernameEdit = False
     passwordEdit = False
+    firstShow = True
     
     def __init__(self):
         super(LoginWindow, self).__init__()
+        self.firstShow = True
         self.initUI()
     
     def loginSubmit(self):
 	self.loginButton.setEnabled(False)
-	global backupInstance
-	backupInstance = Provider.getInstance( self.providerBox.currentText() )
-	resulttype, result = backupInstance.login( str(self.usernameEdit.text()), str(self.passwordEdit.text()) )
+	global backupInstance, config
+	backupInstance = Provider.getInstance( self.providerBox.currentText(), config )
+	resulttype, result = backupInstance.login( str(self.usernameEdit.text()), str(self.passwordEdit.text()), None )
 	if resulttype != "ERROR":
 	  # success
 	  self.hide()
@@ -122,7 +135,15 @@ class LoginWindow(QtGui.QWidget):
 	
 	self.loginButton.setEnabled(True)
         
+    def event(self, event):
+	if self.firstShow and event.type() == QtCore.QEvent.ActivationChange:
+	  self.firstShow = False
+	  if ( self.usernameEdit.text() and self.passwordEdit.text() ):
+	    self.loginSubmit()
+	return super(LoginWindow, self).event(event)
+    
     def initUI(self):
+        global config
         
         username = QtGui.QLabel('Username')
         password = QtGui.QLabel('Password')
@@ -131,8 +152,11 @@ class LoginWindow(QtGui.QWidget):
         self.providerBox.addItem('Virgin Media');
         
         self.usernameEdit = QtGui.QLineEdit()
+        self.usernameEdit.setText( config.username )
+        
         self.passwordEdit = QtGui.QLineEdit()
         self.passwordEdit.setEchoMode(QtGui.QLineEdit.Password)
+        self.passwordEdit.setText( config.password )
         self.loginButton = QtGui.QPushButton('Login')
 
         grid = QtGui.QHBoxLayout()
@@ -182,7 +206,6 @@ app = KApplication ()
 kmainwin = KMainWindow()
 
 loginwin = LoginWindow()
-loginwin.show()
 global mainwin
 mainwin = loginwin
 
