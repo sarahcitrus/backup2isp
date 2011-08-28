@@ -51,9 +51,17 @@ class BackupWindow(QtGui.QWidget):
 	global choosebackuplocation
 	choosebackuplocation.show()
     
+    def updateVolumeName ( self, detail ):
+	self.backupVolumeTitle.setText(detail)
+    
     def initUI(self):
+	global config
+        backupTitle = QtGui.QLabel('Backup Volume:')
+        self.backupVolumeTitle = QtGui.QLabel(config.backupName)
 	self.manageBackupButton = QtGui.QPushButton('Manage Backup Volumes')
         grid = QtGui.QHBoxLayout()
+        grid.addWidget(backupTitle)
+        grid.addWidget(self.backupVolumeTitle)
         grid.addWidget(self.manageBackupButton)
         self.setLayout(grid)
         self.setWindowTitle("Backup2isp")
@@ -79,6 +87,7 @@ class BackupLocationWindow(QtGui.QWidget):
 	  self.hide()
 	  mainwin = backupwin
 	  mainwin.show()
+	  backupwin.updateVolumeName( self.backupList.currentText() )
 	else:
 	  KMessageBox.error(None, result[0]['message'])
     
