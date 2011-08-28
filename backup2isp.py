@@ -49,9 +49,10 @@ class BackupWindow(QtGui.QWidget):
         
     def beginBackup ( self ):
         global config
-        print config.syncpaths
         if ( len(config.syncpaths) == 0 ):
 	  self.updateProgress("No sync paths configured")
+	else:
+	  print config.syncpaths
     
     def manageBackups( self ):
 	global choosebackuplocation

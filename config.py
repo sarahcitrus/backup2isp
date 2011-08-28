@@ -1,4 +1,4 @@
-import ConfigParser, socket, hashlib, os
+import ConfigParser, socket, hashlib, os, pickle
 
 class Config():
   
@@ -37,7 +37,7 @@ class Config():
       self.config.set('Server', 'password', "")
   
       self.config.add_section('Local')
-      self.config.set('Local', 'localpaths', [])
+      self.config.set('Local', 'localpaths', pickle.dumps([]))
       self.config.set('Local', 'remotepath', "/")
       self.config.set('Local', 'backupname', "")
     
@@ -54,7 +54,7 @@ class Config():
     self.password = self.config.get('Server', 'password')
     self.backupName = self.config.get('Local', 'backupname')
     self.remotepath = self.config.get('Local', 'remotepath')
-    self.syncpaths = self.config.get('Local', 'localpaths')
+    self.syncpaths = pickle.loads(self.config.get('Local', 'localpaths'))
     self.tokenexpiry = 0
 
   def saveConfig (self ):
