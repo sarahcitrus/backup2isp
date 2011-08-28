@@ -4,7 +4,47 @@ from provider import Provider
 from config import Config
 from PyKDE4.kdeui import KApplication, KMainWindow, KMessageBox
 from PyKDE4.kdecore import KCmdLineArgs, ki18n, KAboutData
-from PyQt4 import QtCore, QtGui
+from PyQt4 import QtCore, QtGui, Qt
+from PyQt4.QtCore import Qt
+
+
+class LocalFileTreeWidget(QtGui.QTreeWidget):
+
+    def __init__(self,parent=None):
+
+        QtGui.QTreeWidget.__init__(self,parent)
+
+        itemList = []
+        self.setRootIsDecorated(False);
+        self.setAlternatingRowColors(True);
+
+        itemList.append("File");
+        
+        item = QtGui.QTreeWidgetItem(self, "test")
+        item.setCheckState(0,Qt.Checked);
+        
+        item2 = QtGui.QTreeWidgetItem(self, "test")
+        item2.setCheckState(0,Qt.Checked);
+        item.addChild(item2)
+
+        self.setSelectionMode(QtGui.QAbstractItemView.ExtendedSelection);
+        self.sortItems(0, Qt.AscendingOrder);
+        self.setHeaderLabels(itemList);
+        self.setUniformRowHeights(True);
+        self.setSortingEnabled(True);
+        self.setAcceptDrops(True);
+        self.setContextMenuPolicy(Qt.CustomContextMenu)
+
+    def keyPressEvent(self, k):
+        """
+        Handle the key pressed events.
+        Remove the item when the delete key is pressed.
+        """
+
+        if k.key() == Qt.Key_Delete:
+            for i in range(self.topLevelItemCount()):
+                if self.topLevelItem(i).isSelected():
+                    self.takeTopLevelItem(i);
 
 class Systray(QtGui.QWidget):
    def __init__(self):
@@ -40,6 +80,24 @@ class Systray(QtGui.QWidget):
        if result == KMessageBox.Yes:
 	app.quit()
        
+class ManagePaths(QtGui.QWidget):
+  
+    def __init__(self):
+        super(ManagePaths, self).__init__()
+        self.initUI()
+        
+    def initUI(self):
+	global config
+	self.localFileTree = LocalFileTreeWidget()
+	
+        toplevel = QtGui.QHBoxLayout()
+        toplevel.addWidget(self.localFileTree)
+        
+        gridv = QtGui.QVBoxLayout()
+        gridv.addLayout(toplevel)
+        self.setLayout(gridv)
+        self.setWindowTitle("Backup2isp - Manage Sync Paths")
+        self.move( KApplication.desktop().screen().rect().center() - self.rect().center() )
        
 class BackupWindow(QtGui.QWidget):
   
@@ -58,6 +116,10 @@ class BackupWindow(QtGui.QWidget):
 	global choosebackuplocation
 	choosebackuplocation.show()
     
+    def managePaths( self ):
+	global pathmanage
+	pathmanage.show()
+    
     def updateVolumeName ( self, detail ):
 	self.backupVolumeTitle.setText(detail)
 	
@@ -69,6 +131,7 @@ class BackupWindow(QtGui.QWidget):
         backupTitle = QtGui.QLabel('Backup Volume:')
         self.backupVolumeTitle = QtGui.QLabel(config.backupName)
 	self.manageBackupButton = QtGui.QPushButton('Manage Backup Volumes')
+	self.managePathsButton = QtGui.QPushButton('Manage Sync Paths')
 	
         toplevel = QtGui.QHBoxLayout()
         toplevel.addWidget(backupTitle)
@@ -80,6 +143,7 @@ class BackupWindow(QtGui.QWidget):
         self.progressDetail = QtGui.QLabel('Stopped.')
         secondlevel.addWidget(progressTitle)
         secondlevel.addWidget(self.progressDetail)
+        secondlevel.addWidget(self.managePathsButton)
         
         gridv = QtGui.QVBoxLayout()
         gridv.addLayout(toplevel)
@@ -88,6 +152,7 @@ class BackupWindow(QtGui.QWidget):
         self.setWindowTitle("Backup2isp")
         self.move( KApplication.desktop().screen().rect().center() - self.rect().center() )
 	self.manageBackupButton.connect(self.manageBackupButton, QtCore.SIGNAL("clicked()"), self.manageBackups)
+	self.managePathsButton.connect(self.managePathsButton, QtCore.SIGNAL("clicked()"), self.managePaths)
         self.beginBackup()
         
     
@@ -263,7 +328,7 @@ class LoginWindow(QtGui.QWidget):
         self.show()
         self.move( KApplication.desktop().screen().rect().center() - self.rect().center() )
 
-global backupInstance, choosebackuplocation, config
+global backupInstance, choosebackuplocation, config, pathmanage
 backupInstance = False
 config = Config()
 
@@ -286,6 +351,7 @@ app = KApplication ()
 kmainwin = KMainWindow()
 
 loginwin = LoginWindow()
+pathmanage = ManagePaths()
 global mainwin
 mainwin = loginwin
 
