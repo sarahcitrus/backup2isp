@@ -46,6 +46,12 @@ class BackupWindow(QtGui.QWidget):
     def __init__(self):
         super(BackupWindow, self).__init__()
         self.initUI()
+        
+    def beginBackup ( self ):
+        global config
+        print config.syncpaths
+        if ( len(config.syncpaths) == 0 ):
+	  self.updateProgress("No sync paths configured")
     
     def manageBackups( self ):
 	global choosebackuplocation
@@ -53,21 +59,35 @@ class BackupWindow(QtGui.QWidget):
     
     def updateVolumeName ( self, detail ):
 	self.backupVolumeTitle.setText(detail)
+	
+    def updateProgress ( self, detail ):
+	self.progressDetail.setText(detail)
     
     def initUI(self):
 	global config
         backupTitle = QtGui.QLabel('Backup Volume:')
         self.backupVolumeTitle = QtGui.QLabel(config.backupName)
 	self.manageBackupButton = QtGui.QPushButton('Manage Backup Volumes')
-        grid = QtGui.QHBoxLayout()
-        grid.addWidget(backupTitle)
-        grid.addWidget(self.backupVolumeTitle)
-        grid.addWidget(self.manageBackupButton)
-        self.setLayout(grid)
+	
+        toplevel = QtGui.QHBoxLayout()
+        toplevel.addWidget(backupTitle)
+        toplevel.addWidget(self.backupVolumeTitle)
+        toplevel.addWidget(self.manageBackupButton)
+        
+        secondlevel = QtGui.QHBoxLayout()
+        progressTitle = QtGui.QLabel('Syncing Progress:')
+        self.progressDetail = QtGui.QLabel('Stopped.')
+        secondlevel.addWidget(progressTitle)
+        secondlevel.addWidget(self.progressDetail)
+        
+        gridv = QtGui.QVBoxLayout()
+        gridv.addLayout(toplevel)
+        gridv.addLayout(secondlevel)
+        self.setLayout(gridv)
         self.setWindowTitle("Backup2isp")
         self.move( KApplication.desktop().screen().rect().center() - self.rect().center() )
 	self.manageBackupButton.connect(self.manageBackupButton, QtCore.SIGNAL("clicked()"), self.manageBackups)
-        self.show()
+        self.beginBackup()
         
     
 
@@ -85,6 +105,7 @@ class BackupLocationWindow(QtGui.QWidget):
 	resulttype, result = backupInstance.login( config.username, config.password, self.backupList.currentText() )
 	if resulttype != "ERROR":
 	  self.hide()
+	  backupwin = BackupWindow()
 	  mainwin = backupwin
 	  mainwin.show()
 	  backupwin.updateVolumeName( self.backupList.currentText() )
@@ -264,8 +285,6 @@ app = KApplication ()
 kmainwin = KMainWindow()
 
 loginwin = LoginWindow()
-
-backupwin = BackupWindow()
 global mainwin
 mainwin = loginwin
 

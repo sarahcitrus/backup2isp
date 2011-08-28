@@ -18,7 +18,7 @@ class Config():
     self.password = ""
     self.backupName = ""
     self.remotepath = "/"
-    self.syncpath = "/"
+    self.syncpaths = []
     self.tokenexpiry = 0
     
     self.config = ConfigParser.ConfigParser()
@@ -37,8 +37,8 @@ class Config():
       self.config.set('Server', 'password', "")
   
       self.config.add_section('Local')
-      self.config.set('Local', 'localpath', "")
-      self.config.set('Local', 'remotepath', "")
+      self.config.set('Local', 'localpaths', [])
+      self.config.set('Local', 'remotepath', "/")
       self.config.set('Local', 'backupname', "")
     
       # Writing our configuration file to 'example.cfg'
@@ -54,7 +54,7 @@ class Config():
     self.password = self.config.get('Server', 'password')
     self.backupName = self.config.get('Local', 'backupname')
     self.remotepath = self.config.get('Local', 'remotepath')
-    self.syncpath = self.config.get('Local', 'localpath')
+    self.syncpaths = self.config.get('Local', 'localpaths')
     self.tokenexpiry = 0
 
   def saveConfig (self ):
