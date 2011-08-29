@@ -1,5 +1,5 @@
 #! /usr/bin/python
-import sys
+import sys, os
 from provider import Provider
 from config import Config
 from PyKDE4.kdeui import KApplication, KMainWindow, KMessageBox
@@ -8,43 +8,67 @@ from PyQt4 import QtCore, QtGui, Qt
 from PyQt4.QtCore import Qt
 
 
-class LocalFileTreeWidget(QtGui.QTreeWidget):
+class LocalDirTreeWidget(QtGui.QTreeWidget):
 
     def __init__(self,parent=None):
 
         QtGui.QTreeWidget.__init__(self,parent)
 
         itemList = []
-        self.setRootIsDecorated(False);
-        self.setAlternatingRowColors(True);
 
-        itemList.append("File");
+        itemList.append("Path");
         
-        item = QtGui.QTreeWidgetItem(self, "test")
-        item.setCheckState(0,Qt.Checked);
-        
-        item2 = QtGui.QTreeWidgetItem(self, "test")
-        item2.setCheckState(0,Qt.Checked);
-        item.addChild(item2)
-
         self.setSelectionMode(QtGui.QAbstractItemView.ExtendedSelection);
         self.sortItems(0, Qt.AscendingOrder);
         self.setHeaderLabels(itemList);
         self.setUniformRowHeights(True);
-        self.setSortingEnabled(True);
         self.setAcceptDrops(True);
         self.setContextMenuPolicy(Qt.CustomContextMenu)
+        
+    def expanded ( self, item ) :
+        for x in range(0,item.childCount()):
+	  child = item.child(x)
+	  self.addDirTree ( child , str(child.data(0,0).toString()) )
 
-    def keyPressEvent(self, k):
-        """
-        Handle the key pressed events.
-        Remove the item when the delete key is pressed.
-        """
+    def addDirTree ( self, root, rootdir ):
+	# get list of root dirs
+	try:
+	  items = os.listdir(rootdir)
+	  for item in items:
+	    dirpath =  os.path.join(rootdir,item)
+	    if os.path.isdir( dirpath ) and not os.path.basename(dirpath).startswith('.'):
+	      self.addItem( item, dirpath, False, False, root )
+	except:
+	  pass
+	root.sortChildren(0, Qt.AscendingOrder)
 
-        if k.key() == Qt.Key_Delete:
-            for i in range(self.topLevelItemCount()):
-                if self.topLevelItem(i).isSelected():
-                    self.takeTopLevelItem(i);
+    def initDirTree ( self, rootdir, selected ) :
+	root = self.addItem(rootdir, rootdir,False,False)
+	
+	self.addDirTree( root,rootdir )
+	self.connect(self, QtCore.SIGNAL("itemExpanded(QTreeWidgetItem *)"), self.expanded)
+	
+
+    def addItem ( self, name, data, expanded, checked, parent=None ) :
+	newitem = None
+	if parent == None:
+	  newitem = QtGui.QTreeWidgetItem(self)
+	else:
+	  newitem = QtGui.QTreeWidgetItem(None)
+	if ( checked ) :
+	  newitem.setCheckState(0,Qt.Checked);
+	else:
+	  newitem.setCheckState(0,Qt.Unchecked);
+	  
+        newitem.setText( 0, name )
+        
+        newitem.setData( 0, 0, data )
+        #newitem.setValue( path )
+	if parent != None:
+	  parent.addChild( newitem )
+	  
+	return newitem
+      
 
 class Systray(QtGui.QWidget):
    def __init__(self):
@@ -88,10 +112,11 @@ class ManagePaths(QtGui.QWidget):
         
     def initUI(self):
 	global config
-	self.localFileTree = LocalFileTreeWidget()
+	self.localDirTree = LocalDirTreeWidget()
+	self.localDirTree.initDirTree( "/", config.syncpaths )
 	
         toplevel = QtGui.QHBoxLayout()
-        toplevel.addWidget(self.localFileTree)
+        toplevel.addWidget(self.localDirTree)
         
         gridv = QtGui.QVBoxLayout()
         gridv.addLayout(toplevel)
