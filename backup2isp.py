@@ -31,6 +31,16 @@ class LocalDirTreeWidget(QtGui.QTreeWidget):
 	  child = item.child(x)
 	  self.addDirTree ( child , str(child.toolTip(0)) )
 
+    def checked ( self, item, column ) :
+      
+        for x in range(0,item.childCount()):
+	  child = item.child(x)
+	  
+	  if item.checkState(column) == Qt.Checked:
+	    child.setCheckState(column, Qt.Checked)
+	  if item.checkState(column) == Qt.Unchecked:
+	    child.setCheckState(column, Qt.Unchecked)
+
     def addDirTree ( self, root, rootdir ):
 	# get list of root dirs
 	try:
@@ -38,7 +48,7 @@ class LocalDirTreeWidget(QtGui.QTreeWidget):
 	  for item in items:
 	    dirpath =  os.path.join(rootdir,item)
 	    if os.path.isdir( dirpath ) and not os.path.basename(dirpath).startswith('.'):
-	      self.addItem( item, dirpath, False, False, root )
+	      self.addItem( item, dirpath, False, root.checkState(0), root )
 	except:
 	  pass
 	root.sortChildren(0, Qt.AscendingOrder)
@@ -48,6 +58,7 @@ class LocalDirTreeWidget(QtGui.QTreeWidget):
 	
 	self.addDirTree( root,rootdir )
 	self.connect(self, QtCore.SIGNAL("itemExpanded(QTreeWidgetItem *)"), self.expanded)
+	self.connect(self, QtCore.SIGNAL("itemChanged(QTreeWidgetItem *, int)"), self.checked)
 	
 
     def addItem ( self, name, data, expanded, checked, parent=None ) :
