@@ -19,6 +19,8 @@ class LocalDirTreeWidget(QtGui.QTreeWidget):
         itemList.append("Path");
         
         self.items = {}
+        self.selectedPaths = {}
+        self.excludePaths = {}
         self.setSelectionMode(QtGui.QAbstractItemView.ExtendedSelection);
         self.sortItems(0, Qt.AscendingOrder);
         self.setHeaderLabels(itemList);
@@ -32,14 +34,37 @@ class LocalDirTreeWidget(QtGui.QTreeWidget):
 	  self.addDirTree ( child , str(child.toolTip(0)) )
 
     def checked ( self, item, column ) :
-      
+	if item.checkState(column) == Qt.Checked:
+	  
+	  if item.parent() == None or item.parent().checkState(0) != Qt.Checked:
+	    # add if parent is unchecked, otherwise we would be covered by top-level check
+	    self.selectedPaths[str(item.toolTip(0))] = True
+	  if str(item.toolTip(0)) in self.excludePaths:
+	    # if checked then it obviously isnt excluded
+	    del self.excludePaths[str(item.toolTip(0))]
+	    
+	else:
+	  if str(item.toolTip(0)) in self.selectedPaths:
+	    # if unchecked need to make sure it isnt selected
+	    del self.selectedPaths[str(item.toolTip(0))]
+	  else:
+	    if item.parent() != None and item.parent().checkState(0) == Qt.Checked: 
+	      # if parent has is checked, then we want to exclude this dir
+	      self.excludePaths[str(item.toolTip(0))] = True
+	    else:
+	      # if parent isnt checked, or is top-level dir, then no point excluding it any more
+	      if str(item.toolTip(0)) in self.excludePaths:
+		del self.excludePaths[str(item.toolTip(0))]
+	  
+	  # remove children from exclude list
+	  for x in range(0,item.childCount()):
+	    child = item.child(x)
+	    if str(child.toolTip(0)) in self.excludePaths:
+	      del self.excludePaths[str(child.toolTip(0))]	    
+	
         for x in range(0,item.childCount()):
 	  child = item.child(x)
-	  
-	  if item.checkState(column) == Qt.Checked:
-	    child.setCheckState(column, Qt.Checked)
-	  if item.checkState(column) == Qt.Unchecked:
-	    child.setCheckState(column, Qt.Unchecked)
+	  child.setCheckState( column, item.checkState(column) )
 
     def addDirTree ( self, root, rootdir ):
 	# get list of root dirs
@@ -154,6 +179,7 @@ class BackupWindow(QtGui.QWidget):
         global config
         if ( len(config.syncpaths) == 0 ):
 	  self.updateProgress("No sync paths configured")
+	  self.managePaths()
 	else:
 	  print config.syncpaths
     
