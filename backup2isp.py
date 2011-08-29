@@ -28,7 +28,7 @@ class LocalDirTreeWidget(QtGui.QTreeWidget):
     def expanded ( self, item ) :
         for x in range(0,item.childCount()):
 	  child = item.child(x)
-	  self.addDirTree ( child , str(child.data(0,0).toString()) )
+	  self.addDirTree ( child , str(child.toolTip(0)) )
 
     def addDirTree ( self, root, rootdir ):
 	# get list of root dirs
@@ -61,8 +61,9 @@ class LocalDirTreeWidget(QtGui.QTreeWidget):
 	  newitem.setCheckState(0,Qt.Unchecked);
 	  
         newitem.setText( 0, name )
+        newitem.setToolTip( 0, data )
         
-        newitem.setData( 0, 0, data )
+        #newitem.setData( 0, 0, data )
         #newitem.setValue( path )
 	if parent != None:
 	  parent.addChild( newitem )
