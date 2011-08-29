@@ -18,6 +18,7 @@ class LocalDirTreeWidget(QtGui.QTreeWidget):
 
         itemList.append("Path");
         
+        self.items = {}
         self.setSelectionMode(QtGui.QAbstractItemView.ExtendedSelection);
         self.sortItems(0, Qt.AscendingOrder);
         self.setHeaderLabels(itemList);
@@ -50,6 +51,11 @@ class LocalDirTreeWidget(QtGui.QTreeWidget):
 	
 
     def addItem ( self, name, data, expanded, checked, parent=None ) :
+      
+        # check if has item first
+        if data in self.items:
+	  return self.items[data]
+      
 	newitem = None
 	if parent == None:
 	  newitem = QtGui.QTreeWidgetItem(self)
@@ -67,7 +73,9 @@ class LocalDirTreeWidget(QtGui.QTreeWidget):
         #newitem.setValue( path )
 	if parent != None:
 	  parent.addChild( newitem )
-	  
+	
+	self.items[data] = newitem
+	
 	return newitem
       
 
