@@ -33,7 +33,7 @@ class Steek:
     self.config.password = password
     self.backup = backup
     self.config.backupName = backup
-    self.config.saveConfig()
+    self.config.save()
     
     self.token = False
     meta = self.generateMeta( "sso_mode", { 'sso_mode' : self.provider } , 

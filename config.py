@@ -19,6 +19,7 @@ class Config():
     self.backupName = ""
     self.remotepath = "/"
     self.syncpaths = []
+    self.excludepaths = []
     self.tokenexpiry = 0
     
     self.config = ConfigParser.ConfigParser()
@@ -38,6 +39,7 @@ class Config():
   
       self.config.add_section('Local')
       self.config.set('Local', 'localpaths', pickle.dumps([]))
+      self.config.set('Local', 'excludepaths', pickle.dumps([]))
       self.config.set('Local', 'remotepath', "/")
       self.config.set('Local', 'backupname', "")
     
@@ -55,10 +57,13 @@ class Config():
     self.backupName = self.config.get('Local', 'backupname')
     self.remotepath = self.config.get('Local', 'remotepath')
     self.syncpaths = pickle.loads(self.config.get('Local', 'localpaths'))
+    self.excludepaths = pickle.loads(self.config.get('Local', 'excludepaths'))
     self.tokenexpiry = 0
 
-  def saveConfig (self ):
+  def save (self ):
     self.config.set('Local', 'backupname', self.backupName)
+    self.config.set('Local', 'localpaths', pickle.dumps(self.syncpaths))
+    self.config.set('Local', 'excludepaths', pickle.dumps(self.excludepaths))
     self.config.set('Server', 'username', self.username)
     self.config.set('Server', 'password', self.password)
     with open(self.configfile, 'wb') as configdetail:

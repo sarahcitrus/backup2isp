@@ -155,19 +155,39 @@ class ManagePaths(QtGui.QWidget):
         super(ManagePaths, self).__init__()
         self.initUI()
         
+    def savePaths(self):
+	global config, backupwin
+	config.syncpaths = self.localDirTree.selectedPaths
+	config.excludepaths = self.localDirTree.excludePaths
+	config.save()
+	backupwin.beginBackingUp();
+	self.hide();
+        
+    def cancelPaths(self):
+	self.hide();
+	
     def initUI(self):
 	global config
 	self.localDirTree = LocalDirTreeWidget()
 	self.localDirTree.initDirTree( "/", config.syncpaths )
+	self.savePathButton = QtGui.QPushButton('Save')
+	self.cancelPathButton = QtGui.QPushButton('Cancel')
 	
         toplevel = QtGui.QHBoxLayout()
         toplevel.addWidget(self.localDirTree)
+        bottomlevel = QtGui.QHBoxLayout()
+        bottomlevel.addWidget(self.savePathButton)
+        bottomlevel.addWidget(self.cancelPathButton)
         
         gridv = QtGui.QVBoxLayout()
         gridv.addLayout(toplevel)
+        gridv.addLayout(bottomlevel)
         self.setLayout(gridv)
         self.setWindowTitle("Backup2isp - Manage Sync Paths")
         self.move( KApplication.desktop().screen().rect().center() - self.rect().center() )
+        
+	self.savePathButton.connect(self.savePathButton, QtCore.SIGNAL("clicked()"), self.savePaths)
+	self.cancelPathButton.connect(self.cancelPathButton, QtCore.SIGNAL("clicked()"), self.cancelPaths)
        
 class BackupWindow(QtGui.QWidget):
   
@@ -175,13 +195,19 @@ class BackupWindow(QtGui.QWidget):
         super(BackupWindow, self).__init__()
         self.initUI()
         
-    def beginBackup ( self ):
+    def beginBackingUp ( self ):
         global config
         if ( len(config.syncpaths) == 0 ):
 	  self.updateProgress("No sync paths configured")
-	  self.managePaths()
 	else:
-	  print config.syncpaths
+	  self.updateProgress("Stopped")
+	print config.syncpaths
+        
+    def beginBackup ( self ):
+        global config
+        if ( len(config.syncpaths) == 0 ):
+	  self.managePaths()
+	self.beginBackingUp()
     
     def manageBackups( self ):
 	global choosebackuplocation
