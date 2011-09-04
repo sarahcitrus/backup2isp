@@ -173,7 +173,7 @@ def authenticate( username, password, backup ):
   return results["session"]
   
 
-def doTicket( command , param=None ):
+def doTicket( command , param=None, vault=False ):
   global tokenexpiry, token
   
   # get new auth token if time expired
@@ -185,7 +185,7 @@ def doTicket( command , param=None ):
   
   commandid = "\x05"
   
-  if command in [ "LSMYBACKUPS", "ADDBACKUP", "REMOVEBACKUP", "VIEWCONFIGURATION", "LICENSEINFO" ]:
+  if vault or command in [ "LSMYBACKUPS", "ADDBACKUP", "REMOVEBACKUP", "VIEWCONFIGURATION", "LICENSEINFO" ]:
     commandid = "\b"
   
   
@@ -686,4 +686,12 @@ if __name__ == '__main__':
     if args[0] == "sync":
       sync(args[1], args[2])
       sys.exit(1)
+      
+    if args[0] == "rawcommand":
+      if 2 in args and args[2] == "1":
+	print doTicket(args[1], None, True)
+      else:
+	print doTicket(args[1], None, False)
+      sys.exit(0)
+      
     print "No commands entered"
