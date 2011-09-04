@@ -73,15 +73,26 @@ class LocalDirTreeWidget(QtGui.QTreeWidget):
 	  for item in items:
 	    dirpath =  os.path.join(rootdir,item)
 	    if os.path.isdir( dirpath ) and not os.path.basename(dirpath).startswith('.'):
-	      self.addItem( item, dirpath, False, root.checkState(0), root )
+	      selected = root.checkState(0)
+	      
+	      if dirpath in self.selected:
+		selected = True
+	      if dirpath in self.excluded:
+		selected = False
+	      
+	      self.addItem( item, dirpath, False, selected, root )
 	except:
 	  pass
 	root.sortChildren(0, Qt.AscendingOrder)
 
-    def initDirTree ( self, rootdir, selected ) :
+    def initDirTree ( self, rootdir, selected, excluded ) :
 	root = self.addItem(rootdir, rootdir,False,False)
 	
+	self.selected = selected
+	self.excluded = excluded
+	
 	self.addDirTree( root,rootdir )
+	
 	self.connect(self, QtCore.SIGNAL("itemExpanded(QTreeWidgetItem *)"), self.expanded)
 	self.connect(self, QtCore.SIGNAL("itemChanged(QTreeWidgetItem *, int)"), self.checked)
 	
@@ -169,7 +180,7 @@ class ManagePaths(QtGui.QWidget):
     def initUI(self):
 	global config
 	self.localDirTree = LocalDirTreeWidget()
-	self.localDirTree.initDirTree( "/", config.syncpaths )
+	self.localDirTree.initDirTree( "/", config.syncpaths, config.excludepaths )
 	self.savePathButton = QtGui.QPushButton('Save')
 	self.cancelPathButton = QtGui.QPushButton('Cancel')
 	
