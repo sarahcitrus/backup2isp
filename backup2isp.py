@@ -211,8 +211,8 @@ class BackupWindow(QtGui.QWidget):
         if ( len(config.syncpaths) == 0 ):
 	  self.updateProgress("No sync paths configured")
 	else:
-	  self.updateProgress("Stopped")
-	print config.syncpaths
+	  self.updateProgress("Starting")
+	  print config.syncpaths
         
     def beginBackup ( self ):
         global config
