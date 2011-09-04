@@ -48,7 +48,7 @@ username = config.get('Server', 'username')
 password = config.get('Server', 'password')
 backupName = config.get('Local', 'backupname')
 remotepath = config.get('Local', 'remotepath')
-syncpath = config.get('Local', 'localpath')
+syncpath = config.get('Local', 'localpaths')[0]
 
 tokenfile = os.path.join(configpath, tokenfilename)
 
@@ -132,7 +132,7 @@ def authenticate( username, password, backup ):
     print "No existing token"
   dacform = { 'name': 'DUNGEONDEVICE', 'data': dac }
   authform = { 'name': 'AYMARA', 'data' : "AG\x05\bcommand=LOGIN_BY_SSO#" + 
-  generateMeta( "sso_mode", { 'sso_mode' : provider } , 
+  generateMeta( "sso_mode", { 'sso_mode' : "virgin" } , 
 		"login", { 'login' : username, 'password' : password, 'backup_name' : backup } ) + "#;" }
   
   forms = [dacform, authform]
