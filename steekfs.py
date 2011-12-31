@@ -95,9 +95,9 @@ class SteekFS(Fuse):
 	      st.st_size = filedetail.size
 	    break
 
-	st.st_atime = int(time.time())
-	st.st_mtime = st.st_atime
-	st.st_ctime = st.st_atime
+	st.st_atime = filedetail.date
+	st.st_mtime = filedetail.date
+	st.st_ctime = filedetail.date
 
 	return st
 	
@@ -108,16 +108,18 @@ class SteekFS(Fuse):
 	else:
 	  files = self.dirCache[path]
 	
-	dirents = [ { 'type' : 'd', 'name' : '.'} , { 'type' : 'd', 'name' : '..'} ]
+	dirents = [ { 'type' : 'd', 'name' : '.', 'size' : 4096, 'date' : int(time.time()) } , 
+		    { 'type' : 'd', 'name' : '..', 'size' : 4096, 'date' : int(time.time()) } ]
 	dirents.extend(files)
 	
 	for r in dirents:
 	  entry = fuse.Direntry(r['name'])
+	  entry.size = r['size']
+	  entry.date = r['date']
 	  if r['type'] == 'd':
 	    entry.type = ( stat.S_IFDIR | 0755 )
 	  elif r['type'] == 'f':
 	    entry.type = ( stat.S_IFREG | 0666 )
-	    entry.size = r['size']
 	  yield entry
 
     def mythread ( self ):
@@ -212,5 +214,5 @@ if __name__ == '__main__':
     fs.parse(errex=1)
     #print fs.getattr('/')
     #for item in fs.readdir('/', 0):
-    #  print item
+    #  print item.name, item.size, item.type, item.date
     fs.main()

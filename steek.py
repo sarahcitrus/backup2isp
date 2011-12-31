@@ -1,4 +1,4 @@
-import httplib, urllib, mimetools, re, time, os, pickle
+import httplib, urllib, mimetools, re, time, os, pickle, datetime
 
 class Steek:
   
@@ -102,6 +102,8 @@ class Steek:
     resultdetail['name'] = details[1]
     resultdetail['type'] = 'd'
     resultdetail['size'] = 4096
+    datestruct = time.strptime(details[5], "%Y-%m-%d %H:%M:%S")
+    resultdetail['date'] = int(time.mktime(datestruct))
     if details[0].find('F') != -1:
       resultdetail['type'] = 'f'
       resultdetail['size'] = int(details[6])
