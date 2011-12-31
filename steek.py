@@ -98,7 +98,12 @@ class Steek:
 
   def parseFile ( self, data ):
     details = data.split('|')
-    return details[1]
+    resultdetail = {}
+    resultdetail['name'] = details[1]
+    resultdetail['type'] = 'd'
+    if details[0].find('F') != -1:
+      resultdetail['type'] = 'f'
+    return resultdetail
     
   def listBackups ( self ) : 
     self.getToken()

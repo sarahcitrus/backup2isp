@@ -57,6 +57,7 @@ class SteekStat(fuse.Stat):
 class SteekFS(Fuse):
     """
     """
+    dirCache = {}
 
     def __init__(self, backup,*args, **kw):
         Fuse.__init__(self, *args, **kw)
@@ -84,7 +85,12 @@ class SteekFS(Fuse):
                     or the time of creation on Windows).
         """      
         st = SteekStat()
-	pe = path.split('/')[1:]
+        name = os.path.basename(path)
+	dirlist = self.readdir( os.path.dirname(path) , 0)
+	for filedetail in dirlist:
+	  if filedetail.name == name:
+	    st.st_mode = filedetail.type
+	    break
 
 	st.st_atime = int(time.time())
 	st.st_mtime = st.st_atime
@@ -93,11 +99,22 @@ class SteekFS(Fuse):
 	return st
 	
     def readdir(self, path, offset):
-	files = self.provider.listFiles(path)
-	dirents = [ '.', '..' ]
+	if not path in self.dirCache: 
+	  files = self.provider.listFiles(path)
+	  self.dirCache[path] = files
+	else:
+	  files = self.dirCache[path]
+	
+	dirents = [ { 'type' : 'd', 'name' : '.'} , { 'type' : 'd', 'name' : '..'} ]
 	dirents.extend(files)
+	
 	for r in dirents:
-	    yield fuse.Direntry(r)
+	  entry = fuse.Direntry(r['name'])
+	  if r['type'] == 'd':
+	    entry.type = ( stat.S_IFDIR | 0755 )
+	  elif r['type'] == 'f':
+	    entry.type = ( stat.S_ISREG )
+	  yield entry
 
     def mythread ( self ):
         print '*** mythread'
