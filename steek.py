@@ -75,6 +75,29 @@ class Steek:
     
     return self.token, self.tokenexpiry
   
+  def listFiles ( self, path ) :
+    self.getToken()
+    
+    commandform = { 'name': 'command', 'data' : "LIST" }
+    initform = { 'name': 'init', 'data' : "13000" }
+    option1 = { 'name': 'option1', 'data' : "" }
+    option2 = { 'name': 'option2', 'data' : "" }
+    param1 = { 'name': 'param1', 'data' : path }
+    
+    extraForms = [commandform, initform, option1, option2, param1]
+    
+    details = self.doTicket("LIST", self.loginFormName, None, extraForms )
+    # convert files to list
+    fulllist = []
+    if len(details[0]) > 1:
+      for detail in details[0].split("\n"):
+	fulllist.append(self.parseFile(detail))
+    return fulllist
+
+  def parseFile ( self, data ):
+    details = data.split('|')
+    return details[1]
+    
   def listBackups ( self ) : 
     self.getToken()
     return self.doTicket("LSMYBACKUPS",  self.loginFormName)
@@ -93,7 +116,7 @@ class Steek:
 						{ "session_name" : "user",
 						"notification" : 1 } ) )
 	
-  def doTicket( self, command, formName="DUNGEONTICKET", param=None ):
+  def doTicket( self, command, formName="DUNGEONTICKET", param=None, extraForms=None ):
     
     dacform = { 'name': self.deviceName, 'data': self.dac }
     ticketform = False
@@ -108,17 +131,30 @@ class Steek:
     if command in [ "DELETE" ]:
       commandid = "\x06"
       
-    if param == None:
-      requestform = { 'name': formName, 'data' : "AG\x05"+ commandid +"command=" + command + "#;" }
+    if command in [ "LIST" ]:
+      requestform = { 'name': formName, 'data' : "AG\x05\x06" }
     else:
-      requestform = { 'name': formName, 'data' : "AG\x05"+ commandid + "command=" + command + "#" + param + ";" }
-    
+      if formName != self.ticketFormName:
+	if param == None:
+	  requestform = { 'name': formName, 'data' : "AG\x05"+ commandid + "command=" + command + "#;" }
+	else:
+	  requestform = { 'name': formName, 'data' : "AG\x05"+ commandid + "command=" + command + "#" + param + ";" }
+	
     forms = False
     if ticketform:
-      forms = [ticketform, dacform, requestform]
+      if formName != self.ticketFormName:
+	forms = [ticketform, dacform, requestform]
+      else:
+	forms = [ticketform, dacform]
     else:
-      forms = [dacform, requestform]
-    
+      if formName != self.ticketFormName:
+	forms = [dacform, requestform]
+      else:
+	forms = [dacform]
+      
+    if extraForms != None:
+      for form in extraForms:
+	forms.append(form)
     contenttype, formdata, boundary = self.getFormData( forms )
     
     
