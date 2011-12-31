@@ -75,6 +75,40 @@ class Steek:
     
     return self.token, self.tokenexpiry
   
+  def getFile ( self, path, length, offset ) :
+    self.getToken()
+    filename = os.path.basename(path)
+    path = os.path.dirname(path)
+    
+    commandform = { 'name': 'command', 'data' : "GET" }
+    initform = { 'name': 'init', 'data' : "13000" }
+    param1 = { 'name': 'param1', 'data' : path }
+    param2 = { 'name': 'param2', 'data' : filename }
+    extraForms = [commandform, initform,param1, param2]
+    conn, response = self.doTicket("GET", self.loginFormName, None, extraForms, offset, length )
+    
+    # grab in 1.5k chunks
+    data = ""
+    offsetpos = offset
+    buffersize=1500
+    # skip through data til we hit the start of offset
+    while (offsetpos-buffersize) > 0:
+      response.read(buffersize)
+      offsetpos-=buffersize
+      break
+    
+    while True:
+      datapart = response.read(buffersize)[offsetpos:length-len(data)+offsetpos]
+      if not datapart:
+	  break
+      offsetpos=0
+      data+= datapart
+      if len(data) >= length:
+	break
+    
+    conn.close()
+    return data
+  
   def listFiles ( self, path ) :
     self.getToken()
     
@@ -127,7 +161,7 @@ class Steek:
 						{ "session_name" : "user",
 						"notification" : 1 } ) )
 	
-  def doTicket( self, command, formName="DUNGEONTICKET", param=None, extraForms=None ):
+  def doTicket( self, command, formName="DUNGEONTICKET", param=None, extraForms=None, start=None, length=None ):
     
     dacform = { 'name': self.deviceName, 'data': self.dac }
     ticketform = False
@@ -142,7 +176,7 @@ class Steek:
     if command in [ "DELETE" ]:
       commandid = "\x06"
       
-    if command in [ "LIST" ]:
+    if command in [ "LIST", "GET" ]:
       requestform = { 'name': formName, 'data' : "AG\x05\x06" }
     else:
       if formName != self.ticketFormName:
@@ -174,9 +208,13 @@ class Steek:
     #connection.set_debuglevel(9)
     connection.request("POST", "/gate/dungeongate.php", formdata, headers)
     response = connection.getresponse()
+    
+    if command == 'GET':
+      return connection, response
+    
     data = response.read()
     connection.close()
-    if command not in [ "LIST" ]:
+    if command not in [ "LIST", "GET" ]:
       return self.parseMeta(data)
     else:
       return data

@@ -160,12 +160,12 @@ class SteekFS(Fuse):
         return -errno.ENOSYS
 
     def open ( self, path, flags ):
-        print '*** open', path, flags
-        return -errno.ENOSYS
+        result = self.getattr(path)
+        if type(result) != SteekStat:
+	  return -errno.ENOENT
 
     def read ( self, path, length, offset ):
-        print '*** read', path, length, offset
-        return -errno.ENOSYS
+        return self.provider.getFile(path, length, offset)
 
     def readlink ( self, path ):
         print '*** readlink', path
