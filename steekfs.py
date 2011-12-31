@@ -101,8 +101,6 @@ class SteekFS(Fuse):
 	      st.st_size = filedetail.size
 	    break
 
-	    
-	
 	if found == False:
 	  return -errno.ENOENT
 	    

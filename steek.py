@@ -106,7 +106,7 @@ class Steek:
     resultdetail['date'] = int(time.mktime(datestruct))
     if details[0].find('F') != -1:
       resultdetail['type'] = 'f'
-      resultdetail['size'] = int(details[6])
+      resultdetail['size'] = int(details[2])
     return resultdetail
     
   def listBackups ( self ) : 
