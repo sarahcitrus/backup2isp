@@ -90,6 +90,9 @@ class SteekFS(Fuse):
 	for filedetail in dirlist:
 	  if filedetail.name == name:
 	    st.st_mode = filedetail.type
+	    if st.st_mode & stat.S_IFREG:
+	      st.st_nlink = 1
+	      st.st_size = filedetail.size
 	    break
 
 	st.st_atime = int(time.time())
@@ -113,7 +116,8 @@ class SteekFS(Fuse):
 	  if r['type'] == 'd':
 	    entry.type = ( stat.S_IFDIR | 0755 )
 	  elif r['type'] == 'f':
-	    entry.type = ( stat.S_ISREG )
+	    entry.type = ( stat.S_IFREG | 0666 )
+	    entry.size = r['size']
 	  yield entry
 
     def mythread ( self ):
@@ -207,5 +211,6 @@ if __name__ == '__main__':
                                          dash_s_do='setsingle')
     fs.parse(errex=1)
     #print fs.getattr('/')
-    #print fs.readdir('/', 0)
+    #for item in fs.readdir('/', 0):
+    #  print item
     fs.main()

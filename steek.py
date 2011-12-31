@@ -101,8 +101,10 @@ class Steek:
     resultdetail = {}
     resultdetail['name'] = details[1]
     resultdetail['type'] = 'd'
+    resultdetail['size'] = 4096
     if details[0].find('F') != -1:
       resultdetail['type'] = 'f'
+      resultdetail['size'] = int(details[6])
     return resultdetail
     
   def listBackups ( self ) : 
