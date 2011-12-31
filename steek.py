@@ -1,4 +1,4 @@
-import httplib, urllib, mimetools, re, time, os, pickle, datetime
+import httplib, urllib, mimetools, re, time, os, pickle, datetime, logging
 
 class Steek:
   
@@ -75,7 +75,7 @@ class Steek:
     
     return self.token, self.tokenexpiry
   
-  def getFile ( self, path, length, offset ) :
+  def getFileToPath ( self, path, localpath ) :
     self.getToken()
     filename = os.path.basename(path)
     path = os.path.dirname(path)
@@ -85,29 +85,19 @@ class Steek:
     param1 = { 'name': 'param1', 'data' : path }
     param2 = { 'name': 'param2', 'data' : filename }
     extraForms = [commandform, initform,param1, param2]
-    conn, response = self.doTicket("GET", self.loginFormName, None, extraForms, offset, length )
+    conn, response = self.doTicket("GET", self.loginFormName, None, extraForms )
     
-    # grab in 1.5k chunks
-    data = ""
-    offsetpos = offset
-    buffersize=1500
-    # skip through data til we hit the start of offset
-    while (offsetpos-buffersize) > 0:
-      response.read(buffersize)
-      offsetpos-=buffersize
-      break
-    
+    localfile = open(localpath,"w")
+    buffersize=8096
     while True:
-      datapart = response.read(buffersize)[offsetpos:length-len(data)+offsetpos]
+      datapart = response.read(buffersize)
       if not datapart:
 	  break
-      offsetpos=0
-      data+= datapart
-      if len(data) >= length:
-	break
+      localfile.write(datapart)
     
+    localfile.close()
     conn.close()
-    return data
+    return True
   
   def listFiles ( self, path ) :
     self.getToken()
@@ -202,10 +192,11 @@ class Steek:
 	forms.append(form)
     contenttype, formdata, boundary = self.getFormData( forms )
     
+    #logging.debug(command + ' ' + formdata)
     
     headers = {"User-Agent": self.useragent, "Content-Type" : contenttype, "Accept" : "*/*"}
     connection = httplib.HTTPSConnection(self.server)
-    #connection.set_debuglevel(9)
+    connection.set_debuglevel(9)
     connection.request("POST", "/gate/dungeongate.php", formdata, headers)
     response = connection.getresponse()
     

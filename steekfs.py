@@ -1,5 +1,5 @@
 #!/usr/bin/python
-import fuse, sys
+import fuse, sys, logging, logging.handlers
 fuse.fuse_python_api = (0, 2)
 from fuse import Fuse
 from config import Config
@@ -8,6 +8,9 @@ from provider import Provider
 
 import stat,os,errno,time
 
+
+logfile = "/var/log/steekfs.log"
+logging.basicConfig(filename=logfile,level=logging.DEBUG)
 
 def dirFromList(list):
     """
@@ -165,7 +168,21 @@ class SteekFS(Fuse):
 	  return -errno.ENOENT
 
     def read ( self, path, length, offset ):
-        return self.provider.getFile(path, length, offset)
+	localpath="/tmp/steekcache/" + backup + "/"
+	logging.debug("read %s" % (localpath) )
+	localpath = os.path.join(localpath, path.strip('/'))
+	logging.debug("read %s - %i - %i - %s" % (path, length, offset, localpath) )
+	try:
+	  os.makedirs(os.path.dirname(localpath))
+	except:
+	  pass
+	
+	if not os.path.exists(localpath):
+	  self.provider.getFileToPath(path, localpath)
+	
+	openfile = open(localpath, 'r')
+	openfile.seek(offset)
+	return openfile.read(length)
 
     def readlink ( self, path ):
         print '*** readlink', path
