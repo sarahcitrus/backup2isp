@@ -87,11 +87,13 @@ class Steek:
     extraForms = [commandform, initform, option1, option2, param1]
     
     details = self.doTicket("LIST", self.loginFormName, None, extraForms )
+    details = details.split("\n")
     # convert files to list
     fulllist = []
-    if len(details[0]) > 1:
-      for detail in details[0].split("\n"):
-	fulllist.append(self.parseFile(detail))
+    if len(details) > 1:
+      for detail in details:
+	if len(detail) >0 :
+	  fulllist.append(self.parseFile(detail))
     return fulllist
 
   def parseFile ( self, data ):
@@ -165,7 +167,10 @@ class Steek:
     response = connection.getresponse()
     data = response.read()
     connection.close()
-    return self.parseMeta(data)
+    if command not in [ "LIST" ]:
+      return self.parseMeta(data)
+    else:
+      return data
     
   def generateMeta ( self, param, params, param2 = False, params2 = False ):
     paramstring = "parameters=" + str(len(param)) + "|" + param + "|" + str(len(params[param])) + "|" + params[param] + "|"

@@ -93,11 +93,9 @@ class SteekFS(Fuse):
 	return st
 	
     def readdir(self, path, offset):
-	print "here"
 	files = self.provider.listFiles(path)
 	dirents = [ '.', '..' ]
 	dirents.extend(files)
-	print dirents
 	for r in dirents:
 	    yield fuse.Direntry(r)
 
