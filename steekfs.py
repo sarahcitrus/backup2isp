@@ -85,16 +85,27 @@ class SteekFS(Fuse):
                     or the time of creation on Windows).
         """      
         st = SteekStat()
+	if path == "/":
+	  return st
         name = os.path.basename(path)
 	dirlist = self.readdir( os.path.dirname(path) , 0)
+	
+	found=False
+	
 	for filedetail in dirlist:
 	  if filedetail.name == name:
+	    found=True
 	    st.st_mode = filedetail.type
 	    if st.st_mode & stat.S_IFREG:
 	      st.st_nlink = 1
 	      st.st_size = filedetail.size
 	    break
 
+	    
+	
+	if found == False:
+	  return -errno.ENOENT
+	    
 	st.st_atime = filedetail.date
 	st.st_mtime = filedetail.date
 	st.st_ctime = filedetail.date
