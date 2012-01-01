@@ -142,63 +142,63 @@ class SteekFS(Fuse):
         pass
 
     def chmod ( self, path, mode ):
-        print '*** chmod', path, oct(mode)
+        logging.debug("UNIMPLEMENTED %s - %s - %s" % ('chmod', path, oct(mode)) )
         return -errno.ENOSYS
 
     def chown ( self, path, uid, gid ):
-        print '*** chown', path, uid, gid
+        logging.debug("UNIMPLEMENTED %s - %s - %i - %i" % ('chown', path, uid, gid) )
         return -errno.ENOSYS
 
     def link ( self, targetPath, linkPath ):
-        print '*** link', targetPath, linkPath
+        logging.debug("UNIMPLEMENTED %s - %s - %s" % ('link', targetPath, linkPath ) )
         return -errno.ENOSYS
 
     def mkdir ( self, path, mode ):
-        print '*** mkdir', path, oct(mode)
+        logging.debug("UNIMPLEMENTED %s - %s - %s" % ('mkdir', path, oct(mode) ) )
         return -errno.ENOSYS
 
     def mknod ( self, path, mode, dev ):
-        print '*** mknod', path, oct(mode), dev
+        logging.debug("UNIMPLEMENTED %s - %s - %s - %s" % ('mknod', path, oct(mode), dev ) )
         return -errno.ENOSYS
 
     def readlink ( self, path ):
-        print '*** readlink', path
+        logging.debug("UNIMPLEMENTED %s - %s" % ('readlink', path ) )
         return -errno.ENOSYS
 
     def release ( self, path, flags ):
-        print '*** release', path, flags
+        logging.debug("UNIMPLEMENTED %s - %s - %i" % ('release', path, flags ) )
         return -errno.ENOSYS
 
     def rename ( self, oldPath, newPath ):
-        print '*** rename', oldPath, newPath
+        logging.debug("UNIMPLEMENTED %s - %s - %s" % ('rename', oldPath, newPath ) )
         return -errno.ENOSYS
 
     def rmdir ( self, path ):
-        print '*** rmdir', path
+        logging.debug("UNIMPLEMENTED %s - %s" % ('rmdir', path ) )
         return -errno.ENOSYS
 
     def statfs ( self ):
-        print '*** statfs'
+        logging.debug("UNIMPLEMENTED %s" % ('statfs' ) )
         return -errno.ENOSYS
 
     def symlink ( self, targetPath, linkPath ):
-        print '*** symlink', targetPath, linkPath
+        logging.debug("UNIMPLEMENTED %s - %s - %s" % ('symlink', targetPath, linkPath ) )
         return -errno.ENOSYS
 
     def truncate ( self, path, size ):
-        print '*** truncate', path, size
+        logging.debug("UNIMPLEMENTED %s - %s - %i" % ('truncate', path, size ) )
         return -errno.ENOSYS
 
     def unlink ( self, path ):
-        print '*** unlink', path
+        logging.debug("UNIMPLEMENTED %s - %s" % ('unlink', path ) )
         return -errno.ENOSYS
 
     def utime ( self, path, times ):
-        print '*** utime', path, times
+        logging.debug("UNIMPLEMENTED %s - %s - %i" % ('utime', path, times ) )
         return -errno.ENOSYS
 
     def write ( self, path, buf, offset ):
-        print '*** write', path, buf, offset
+        logging.debug("UNIMPLEMENTED %s - %s - %s - %i" % ('write', path, buf, offset ) )
         return -errno.ENOSYS
 
 if __name__ == '__main__':
