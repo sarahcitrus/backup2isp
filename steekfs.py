@@ -169,11 +169,14 @@ class SteekFS(Fuse):
 	  return -errno.ENOENT
 
     def read ( self, path, length, offset ):
+	logging.debug("read %s - %i - %i" % (path, length, offset ) )
 	result = self.getattr(path)
 	if type(result) != SteekStat:
 	  return -errno.ENOENT
 	else:
-	  return self.provider.readFileById(result.steek_id, length, offset, result.st_size)
+	  data = self.provider.readFileById(result.steek_id, length, offset, result.st_size)
+	  logging.debug("got %i" % (len(data)) )
+	  return data
 
     def readlink ( self, path ):
         print '*** readlink', path

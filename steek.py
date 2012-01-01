@@ -88,11 +88,11 @@ class Steek:
       
     headers = {"User-Agent": self.useragent, "Accept" : "*/*", "Range" : "bytes=" + str(offset) + "-" + str(offset+length) }
     connection = httplib.HTTPSConnection(self.server)
-    connection.set_debuglevel(9)
+    #connection.set_debuglevel(9)
     connection.request("POST", "/gate/download.php" + "?id=" + id + "&ticket=" +  self.token, None, headers)
     response = connection.getresponse()
     if response.status == 206:
-      data = response.read()
+      data = response.read(length)
       connection.close()
       return data
     else:
