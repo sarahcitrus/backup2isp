@@ -73,6 +73,7 @@ class SteekFS(Fuse):
 
 
     def getattr(self, path):
+	logging.debug("%s - %s" % ('getattr', path ) )
         st = SteekStat()
 	if path == "/":
 	  return st
@@ -101,6 +102,7 @@ class SteekFS(Fuse):
 	return st
 	
     def readdir(self, path, offset):
+	logging.debug("%s - %s - %i" % ('readdir', path, offset ) )
 	if not path in self.dirCache: 
 	  files = self.provider.listFiles(path)
 	  self.dirCache[path] = files
@@ -128,14 +130,20 @@ class SteekFS(Fuse):
 	  return -errno.ENOENT
 
     def read ( self, path, length, offset ):
-	logging.debug("read %s - %i - %i" % (path, length, offset ) )
 	result = self.getattr(path)
 	if type(result) != SteekStat:
 	  return -errno.ENOENT
 	else:
 	  data = self.provider.readFileById(result.steek_id, length, offset, result.st_size)
-	  logging.debug("got %i" % (len(data)) )
 	  return data
+
+    def mknod ( self, path, mode, dev ):
+	logging.debug("%s - %s - %s - %s" % ('mknod', path, oct(mode), dev ) )
+        return self.write(path, '', 0)
+        
+    def write ( self, path, buf, offset ):
+        logging.debug("%s - %s - %s - %i" % ('write', path, buf, offset ) )
+        return self.provider.writeToPath( path, buf, offset )
 
     def fsync ( self, path, isFsyncFile ):
 	# cant implement, dont have a local write cache
@@ -157,9 +165,6 @@ class SteekFS(Fuse):
         logging.debug("UNIMPLEMENTED %s - %s - %s" % ('mkdir', path, oct(mode) ) )
         return -errno.ENOSYS
 
-    def mknod ( self, path, mode, dev ):
-        logging.debug("UNIMPLEMENTED %s - %s - %s - %s" % ('mknod', path, oct(mode), dev ) )
-        return -errno.ENOSYS
 
     def readlink ( self, path ):
         logging.debug("UNIMPLEMENTED %s - %s" % ('readlink', path ) )
@@ -196,11 +201,7 @@ class SteekFS(Fuse):
     def utime ( self, path, times ):
         logging.debug("UNIMPLEMENTED %s - %s - %i" % ('utime', path, times ) )
         return -errno.ENOSYS
-
-    def write ( self, path, buf, offset ):
-        logging.debug("UNIMPLEMENTED %s - %s - %s - %i" % ('write', path, buf, offset ) )
-        return -errno.ENOSYS
-
+        
 if __name__ == '__main__':
     usage = "Usage: steekfs.py backup /mount/path"
     if(len(sys.argv) < 2):

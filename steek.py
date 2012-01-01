@@ -1,4 +1,4 @@
-import httplib, urllib, mimetools, re, time, os, pickle, datetime, logging, errno
+import httplib, urllib, mimetools, re, time, os, pickle, datetime, logging, errno, mimetypes, hashlib
 
 class Steek:
   
@@ -97,6 +97,50 @@ class Steek:
       return data
     else:
       return -errno.EIO
+      
+  def writeToPath ( self, path, buf, offset ) :
+    self.getToken()
+    contenttypetext = "text/plain"
+    filename = os.path.basename(path)
+    path = os.path.dirname(path).strip('/')
+    
+    sha1hash = hashlib.sha1();
+    sha1hash.update(buf)
+    
+    sha1 = sha1hash.hexdigest().upper()
+
+    commandform = { 'name': 'command', 'data' : "PUT" }
+    initform = { 'name': 'init', 'data' : "13000" }
+    option1 = { 'name': 'option1', 'data' : "O" }
+    option10 = { 'name': 'option10', 'data' : "" }
+    option2 = { 'name': 'option2', 'data' : time.strftime("%Y-%m-%d %H:%M:%S") }
+    option3 = { 'name': 'option3', 'data' : "15" }
+    option4 = { 'name': 'option4', 'data' : "0" }
+    option5 = { 'name': 'option5', 'data' : "2|#type=1|0|#hidden=1|0|#system=1|0|#readonly=1|0|#permissions=1|0|#;" }
+    option6 = { 'name': 'option6', 'data' : "SHA1:" + sha1 }
+    option7 = { 'name': 'option7', 'data' : "NOT_CRYPTED" }
+    option8 = { 'name': 'option8', 'data' : "0" }
+    option9 = { 'name': 'option9', 'data' : "" }
+    param1 = { 'name': 'param1', 'data' : path }
+    param2 = { 'name': 'param2', 'data' : filename }
+    filedetail = { 'name': 'file', 'data' : "Content-Type: " + contenttypetext + "\r\n\r\n", 'filename' : filename }
+    extraForms = [commandform, initform, option1, option10, option2, option3, option4, option5, option6, option7, option8, option9, param1, param2, filedetail ]
+    conn, boundary, formdata, headers = self.doTicket("PUT", self.loginFormName, None, extraForms )
+    
+    conn.request("POST", "/gate/dungeongate.php", formdata, headers)
+    
+    finalstring = "\r\n------------------------------" + boundary + "--"
+    
+    if len(buf) > 0:
+      conn.send( buf )
+    conn.send(finalstring)
+    
+    response = conn.getresponse()
+    
+    data = response.read()
+    conn.close()
+    
+    return len(buf)
   
   def getFileToPath ( self, path, localpath ) :
     self.getToken()
@@ -190,7 +234,7 @@ class Steek:
     if command in [ "DELETE" ]:
       commandid = "\x06"
       
-    if command in [ "LIST", "GET" ]:
+    if command in [ "LIST", "GET", "PUT" ]:
       requestform = { 'name': formName, 'data' : "AG\x05\x06" }
     else:
       if formName != self.ticketFormName:
@@ -221,11 +265,16 @@ class Steek:
     headers = {"User-Agent": self.useragent, "Content-Type" : contenttype, "Accept" : "*/*"}
     connection = httplib.HTTPSConnection(self.server)
     #connection.set_debuglevel(9)
+    
+    
+    if command == 'PUT':
+      return connection, boundary, formdata, headers
+    
     connection.request("POST", "/gate/dungeongate.php", formdata, headers)
     response = connection.getresponse()
     
     if command == 'GET':
-      return connection, response
+      return connection, response, boundary
     
     data = response.read()
     connection.close()
