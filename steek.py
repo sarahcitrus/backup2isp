@@ -106,7 +106,12 @@ class Steek:
     else:
       logging.error(str(headers) + str(response.getheaders()) + "\n" + response.read())
       return -errno.EIO
-      
+  
+  def deleteFileById ( self, id ):
+    self.getToken()
+    
+    return self.doTicket("DELETE", self.loginFormName, self.generateMetaList( { "ids" : ( id, ), "types" : ('f',) } ) )
+  
   def writeToPath ( self, path, buf, offset ) :
     self.getToken()
     contenttypetext = "text/plain"
@@ -120,9 +125,9 @@ class Steek:
 
     commandform = { 'name': 'command', 'data' : "PUT" }
     initform = { 'name': 'init', 'data' : "13000" }
-    option1 = { 'name': 'option1', 'data' : "O" }
-    option10 = { 'name': 'option10', 'data' : "" }
-    option2 = { 'name': 'option2', 'data' : time.strftime("%Y-%m-%d %H:%M:%S") }
+    option1 = { 'name': 'option1', 'data' : "O" } # O (not zero) is overwrite
+    option10 = { 'name': 'option10', 'data' : "" } # ????
+    option2 = { 'name': 'option2', 'data' : time.strftime("%Y-%m-%d %H:%M:%S") } # date
     option3 = { 'name': 'option3', 'data' : "15" }
     option4 = { 'name': 'option4', 'data' : "0" }
     option5 = { 'name': 'option5', 'data' : "2|#type=1|0|#hidden=1|0|#system=1|0|#readonly=1|0|#permissions=1|0|#;" }
@@ -302,9 +307,24 @@ class Steek:
       return self.parseMeta(data)
     else:
       return data
+  
+  def generateMetaList ( self, params ) :
+    paramstring = ""
     
-  def generateMeta ( self, param, params, param2 = False, params2 = False ):
-    paramstring = "parameters=" + str(len(param)) + "|" + param + "|" + str(len(params[param])) + "|" + params[param] + "|"
+    for key,param in params.items():
+      first = True
+      paramstring+=key+"="
+      for item in param:
+	if first == False:
+	  paramstring += "|"
+	else:
+	  first = False
+	paramstring += str(len(str(item))) + "|" + str(item)
+      paramstring+="|#"
+    return paramstring
+  
+  def generateMeta ( self, param, params, param2 = False, params2 = False, param1Name="parameters", param2Name="options" ):
+    paramstring = param1Name+"=" + str(len(param)) + "|" + param + "|" + str(len(params[param])) + "|" + params[param] + "|"
     del params[param]
     
     for key in params.keys():
@@ -313,7 +333,7 @@ class Steek:
       paramstring += str(len(key)) + "|"  + key + "|" + str(len( str(value) )) + "|" + str(value) + "|"
     
     if param2:
-      paramstring += "#options=" + str(len(param2)) + "|" + param2 + "|" + str(len(params2[param2])) + "|" + params2[param2] + "|"
+      paramstring += "#"+ param2Name+"=" + str(len(param2)) + "|" + param2 + "|" + str(len(params2[param2])) + "|" + params2[param2] + "|"
       del params2[param2]
       
       for key in params2.keys():

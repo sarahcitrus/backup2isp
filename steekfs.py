@@ -65,6 +65,7 @@ class SteekFS(Fuse):
 	dirpath = os.path.dirname(path).strip('/')
 	if dirpath in self.dirCache:
 	  del self.dirCache[dirpath]
+	  logging.debug("%s - %s" % ('dir cache removed', dirpath ) )
 
     def __init__(self, backup,*args, **kw):
         Fuse.__init__(self, *args, **kw)
@@ -156,11 +157,25 @@ class SteekFS(Fuse):
         return self.write(path, '', 0)
         
     def write ( self, path, buf, offset ):
-        logging.debug("%s - %s - %s - %i" % ('write', path, buf, offset ) )
-        result = self.provider.writeToPath( path, buf, offset )
-        self.invalidateDirCache(path)
-        return result
+	if offset == 0:
+	  logging.debug("%s - %s - %i - %i" % ('write', path, len(buf), offset ) )
+	  result = self.provider.writeToPath( path, buf, offset )
+	  self.invalidateDirCache(path)
+	  return result
+	else:
+	  logging.debug("UNIMPLEMENTED %s - %s - %i - %i" % ('write', path, len(buf), offset ) )
+	  return -errno.ENOSYS
 
+    def unlink ( self, path ):
+        logging.debug("%s - %s" % ('unlink', path ) )
+        result = self.getattr(path)
+        if type(result) != SteekStat:
+	  return -errno.ENOENT
+	else:
+	  result = self.provider.deleteFileById(result.steek_id)
+	  self.invalidateDirCache(path)
+	  return 0
+        
     def fsync ( self, path, isFsyncFile ):
 	# cant implement, dont have a local write cache
         pass
@@ -203,10 +218,6 @@ class SteekFS(Fuse):
 
     def symlink ( self, targetPath, linkPath ):
         logging.debug("UNIMPLEMENTED %s - %s - %s" % ('symlink', targetPath, linkPath ) )
-        return -errno.ENOSYS
-        
-    def unlink ( self, path ):
-        logging.debug("UNIMPLEMENTED %s - %s" % ('unlink', path ) )
         return -errno.ENOSYS
 
     def utime ( self, path, times ):
