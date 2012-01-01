@@ -172,7 +172,7 @@ class SteekFS(Fuse):
         if type(result) != SteekStat:
 	  return -errno.ENOENT
 	else:
-	  if result.st_mode % stat.S_IFDIR:
+	  if result.st_mode & stat.S_IFDIR:
 	    result = self.provider.deleteFileById(result.steek_id, 'd')
 	  else:
 	    result = self.provider.deleteFileById(result.steek_id, 'f')
