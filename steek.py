@@ -83,10 +83,18 @@ class Steek:
   def readFileById ( self, id, length, offset, size ):
     self.getToken()
     
-    if length+offset > size:
-      length = size-offset-1
+    if size == 0 or offset >= size:
+      return ''
+    
+    start = offset
+    end = offset+length
+    
+    if offset + length >= size:
+      end = size
+    
+    end-=1
       
-    headers = {"User-Agent": self.useragent, "Accept" : "*/*", "Range" : "bytes=" + str(offset) + "-" + str(offset+length) }
+    headers = {"User-Agent": self.useragent, "Accept" : "*/*", "Range" : "bytes=" + str(start) + "-" + str(end) }
     connection = httplib.HTTPSConnection(self.server)
     #connection.set_debuglevel(9)
     connection.request("POST", "/gate/download.php" + "?id=" + id + "&ticket=" +  self.token, None, headers)
@@ -96,6 +104,7 @@ class Steek:
       connection.close()
       return data
     else:
+      logging.error(str(headers) + str(response.getheaders()) + "\n" + response.read())
       return -errno.EIO
       
   def writeToPath ( self, path, buf, offset ) :

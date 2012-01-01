@@ -130,6 +130,7 @@ class SteekFS(Fuse):
 	  return -errno.ENOENT
 
     def read ( self, path, length, offset ):
+	logging.debug("%s - %s - %i - %i" % ('read', path, length, offset ) )
 	result = self.getattr(path)
 	if type(result) != SteekStat:
 	  return -errno.ENOENT
