@@ -196,7 +196,7 @@ class Steek:
     
     headers = {"User-Agent": self.useragent, "Content-Type" : contenttype, "Accept" : "*/*"}
     connection = httplib.HTTPSConnection(self.server)
-    connection.set_debuglevel(9)
+    #connection.set_debuglevel(9)
     connection.request("POST", "/gate/dungeongate.php", formdata, headers)
     response = connection.getresponse()
     

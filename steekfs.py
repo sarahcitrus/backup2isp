@@ -43,6 +43,14 @@ def getParts(path):
     """
     pass
   
+def filesize ( path ):
+    try:
+      result = os.stat(path)
+      return result.st_size
+    except:
+      return 0
+  
+  
   
 class SteekStat(fuse.Stat):
   def __init__(self):
@@ -176,10 +184,33 @@ class SteekFS(Fuse):
 	  os.makedirs(os.path.dirname(localpath))
 	except:
 	  pass
-	
-	if not os.path.exists(localpath):
-	  self.provider.getFileToPath(path, localpath)
-	
+      
+	if os.fork():
+	  # wait for data requested to be available
+	  cyclessincechange=0
+	  timeout=10
+	  oldsize=0
+	  newsize=filesize( localpath )
+	  filedetails = self.getattr(path)
+	  
+	  while newsize < length+offset and newsize < filedetails.st_size:
+	    time.sleep(0.1)
+	    oldsize=newsize
+	    newsize=filesize( localpath )
+	    if oldsize==newsize:
+	      cyclessincechange+=1
+	    else:
+	      cyclessincechange=0
+	      
+	    if cyclessincechange == timeout:
+	      # something broke
+	      return -errno.EIO 
+	else:
+	  # fetch file
+	  if not os.path.exists(localpath):
+	    self.provider.getFileToPath(path, localpath)
+	  sys.exit(0)
+      
 	openfile = open(localpath, 'r')
 	openfile.seek(offset)
 	return openfile.read(length)
