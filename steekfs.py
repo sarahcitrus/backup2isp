@@ -172,9 +172,16 @@ class SteekFS(Fuse):
         if type(result) != SteekStat:
 	  return -errno.ENOENT
 	else:
-	  result = self.provider.deleteFileById(result.steek_id)
+	  if result.st_mode % stat.S_IFDIR:
+	    result = self.provider.deleteFileById(result.steek_id, 'd')
+	  else:
+	    result = self.provider.deleteFileById(result.steek_id, 'f')
 	  self.invalidateDirCache(path)
 	  return 0
+
+    def rmdir ( self, path ):
+        logging.debug("%s - %s" % ('rmdir', path ) )
+        return self.unlink(path)
         
     def fsync ( self, path, isFsyncFile ):
 	# cant implement, dont have a local write cache
@@ -206,10 +213,6 @@ class SteekFS(Fuse):
 
     def rename ( self, oldPath, newPath ):
         logging.debug("UNIMPLEMENTED %s - %s - %s" % ('rename', oldPath, newPath ) )
-        return -errno.ENOSYS
-
-    def rmdir ( self, path ):
-        logging.debug("UNIMPLEMENTED %s - %s" % ('rmdir', path ) )
         return -errno.ENOSYS
 
     def statfs ( self ):

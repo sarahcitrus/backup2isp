@@ -107,10 +107,10 @@ class Steek:
       logging.error(str(headers) + str(response.getheaders()) + "\n" + response.read())
       return -errno.EIO
   
-  def deleteFileById ( self, id ):
+  def deleteFileById ( self, id, type ):
     self.getToken()
     
-    return self.doTicket("DELETE", self.loginFormName, self.generateMetaList( { "ids" : ( id, ), "types" : ('f',) } ) )
+    return self.doTicket("DELETE", self.loginFormName, self.generateMetaList( { "ids" : ( id, ), "types" : (type,) } ) )
   
   def writeToPath ( self, path, buf, offset ) :
     self.getToken()
