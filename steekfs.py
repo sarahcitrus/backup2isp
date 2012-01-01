@@ -173,7 +173,7 @@ class SteekFS(Fuse):
 	if type(result) != SteekStat:
 	  return -errno.ENOENT
 	else:
-	  return self.provider.readFileById(result.steek_id, length, offset)
+	  return self.provider.readFileById(result.steek_id, length, offset, result.st_size)
 
     def readlink ( self, path ):
         print '*** readlink', path
@@ -232,4 +232,4 @@ if __name__ == '__main__':
     #print fs.getattr('/')
     #for item in fs.readdir('/', 0):
     #  print item.name, item.size, item.type, item.date
-    #fs.main()
+    fs.main()

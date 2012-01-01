@@ -1,4 +1,4 @@
-import httplib, urllib, mimetools, re, time, os, pickle, datetime, logging
+import httplib, urllib, mimetools, re, time, os, pickle, datetime, logging, errno
 
 class Steek:
   
@@ -80,8 +80,23 @@ class Steek:
     
     return self.token, self.tokenexpiry
   
-  def readFileById ( self, id, length, offset ):
-    return 'test'
+  def readFileById ( self, id, length, offset, size ):
+    self.getToken()
+    
+    if length+offset > size:
+      length = size-offset-1
+      
+    headers = {"User-Agent": self.useragent, "Accept" : "*/*", "Range" : "bytes=" + str(offset) + "-" + str(offset+length) }
+    connection = httplib.HTTPSConnection(self.server)
+    connection.set_debuglevel(9)
+    connection.request("POST", "/gate/download.php" + "?id=" + id + "&ticket=" +  self.token, None, headers)
+    response = connection.getresponse()
+    if response.status == 206:
+      data = response.read()
+      connection.close()
+      return data
+    else:
+      return -errno.EIO
   
   def getFileToPath ( self, path, localpath ) :
     self.getToken()
