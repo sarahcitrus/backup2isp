@@ -60,6 +60,11 @@ class SteekFS(Fuse):
     """
     """
     dirCache = {}
+    
+    def invalidateDirCache ( self, path ):
+	dirpath = os.path.dirname(path).strip('/')
+	if dirpath in self.dirCache:
+	  del self.dirCache[dirpath]
 
     def __init__(self, backup,*args, **kw):
         Fuse.__init__(self, *args, **kw)
@@ -103,11 +108,11 @@ class SteekFS(Fuse):
 	
     def readdir(self, path, offset):
 	logging.debug("%s - %s - %i" % ('readdir', path, offset ) )
-	if not path in self.dirCache: 
+	if not path.strip('/') in self.dirCache: 
 	  files = self.provider.listFiles(path)
-	  self.dirCache[path] = files
+	  self.dirCache[path.strip('/')] = files
 	else:
-	  files = self.dirCache[path]
+	  files = self.dirCache[path.strip('/')]
 	
 	dirents = [ { 'type' : 'd', 'name' : '.', 'size' : 4096, 'date' : int(time.time()), 'steek_id' : -1 } , 
 		    { 'type' : 'd', 'name' : '..', 'size' : 4096, 'date' : int(time.time()), 'steek_id' : -1 } ]
@@ -144,7 +149,9 @@ class SteekFS(Fuse):
         
     def write ( self, path, buf, offset ):
         logging.debug("%s - %s - %s - %i" % ('write', path, buf, offset ) )
-        return self.provider.writeToPath( path, buf, offset )
+        result = self.provider.writeToPath( path, buf, offset )
+        self.invalidateDirCache(path)
+        return result
 
     def fsync ( self, path, isFsyncFile ):
 	# cant implement, dont have a local write cache
@@ -200,7 +207,7 @@ class SteekFS(Fuse):
         return -errno.ENOSYS
 
     def utime ( self, path, times ):
-        logging.debug("UNIMPLEMENTED %s - %s - %i" % ('utime', path, times ) )
+        logging.debug("UNIMPLEMENTED %s - %s - %s" % ('utime', path, times ) )
         return -errno.ENOSYS
         
 if __name__ == '__main__':
