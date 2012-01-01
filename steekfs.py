@@ -143,6 +143,10 @@ class SteekFS(Fuse):
 	  data = self.provider.readFileById(result.steek_id, length, offset, result.st_size)
 	  return data
 
+    def truncate ( self, path, size ):
+        logging.debug("%s - %s - %i" % ('truncate', path, size ) )
+        self.write(path,"", 0)
+
     def mknod ( self, path, mode, dev ):
 	logging.debug("%s - %s - %s - %s" % ('mknod', path, oct(mode), dev ) )
         return self.write(path, '', 0)
@@ -173,7 +177,6 @@ class SteekFS(Fuse):
         logging.debug("UNIMPLEMENTED %s - %s - %s" % ('mkdir', path, oct(mode) ) )
         return -errno.ENOSYS
 
-
     def readlink ( self, path ):
         logging.debug("UNIMPLEMENTED %s - %s" % ('readlink', path ) )
         return -errno.ENOSYS
@@ -197,11 +200,7 @@ class SteekFS(Fuse):
     def symlink ( self, targetPath, linkPath ):
         logging.debug("UNIMPLEMENTED %s - %s - %s" % ('symlink', targetPath, linkPath ) )
         return -errno.ENOSYS
-
-    def truncate ( self, path, size ):
-        logging.debug("UNIMPLEMENTED %s - %s - %i" % ('truncate', path, size ) )
-        return -errno.ENOSYS
-
+        
     def unlink ( self, path ):
         logging.debug("UNIMPLEMENTED %s - %s" % ('unlink', path ) )
         return -errno.ENOSYS
