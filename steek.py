@@ -145,10 +145,13 @@ class Steek:
     conn.send(finalstring)
     
     response = conn.getresponse()
-    
     data = response.read()
     conn.close()
-    
+    if data[0:5] == "ERROR":
+      print data
+      logging.error(str(headers) + str(formdata) + data)
+      return -errno.EIO
+      
     return len(buf)
   
   def getFileToPath ( self, path, localpath ) :
