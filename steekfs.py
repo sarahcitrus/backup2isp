@@ -73,19 +73,6 @@ class SteekFS(Fuse):
 
 
     def getattr(self, path):
-        """
-        - st_mode (protection bits)
-        - st_ino (inode number)
-        - st_dev (device)
-        - st_nlink (number of hard links)
-        - st_uid (user ID of owner)
-        - st_gid (group ID of owner)
-        - st_size (size of file, in bytes)
-        - st_atime (time of most recent access)
-        - st_mtime (time of most recent content modification)
-        - st_ctime (platform dependent; time of most recent metadata change on Unix,
-                    or the time of creation on Windows).
-        """      
         st = SteekStat()
 	if path == "/":
 	  return st
@@ -135,34 +122,6 @@ class SteekFS(Fuse):
 	    entry.type = ( stat.S_IFREG | 0666 )
 	  yield entry
 
-    def mythread ( self ):
-        print '*** mythread'
-        return -errno.ENOSYS
-
-    def chmod ( self, path, mode ):
-        print '*** chmod', path, oct(mode)
-        return -errno.ENOSYS
-
-    def chown ( self, path, uid, gid ):
-        print '*** chown', path, uid, gid
-        return -errno.ENOSYS
-
-    def fsync ( self, path, isFsyncFile ):
-        print '*** fsync', path, isFsyncFile
-        return -errno.ENOSYS
-
-    def link ( self, targetPath, linkPath ):
-        print '*** link', targetPath, linkPath
-        return -errno.ENOSYS
-
-    def mkdir ( self, path, mode ):
-        print '*** mkdir', path, oct(mode)
-        return -errno.ENOSYS
-
-    def mknod ( self, path, mode, dev ):
-        print '*** mknod', path, oct(mode), dev
-        return -errno.ENOSYS
-
     def open ( self, path, flags ):
         result = self.getattr(path)
         if type(result) != SteekStat:
@@ -177,6 +136,30 @@ class SteekFS(Fuse):
 	  data = self.provider.readFileById(result.steek_id, length, offset, result.st_size)
 	  logging.debug("got %i" % (len(data)) )
 	  return data
+
+    def fsync ( self, path, isFsyncFile ):
+	# cant implement, dont have a local write cache
+        pass
+
+    def chmod ( self, path, mode ):
+        print '*** chmod', path, oct(mode)
+        return -errno.ENOSYS
+
+    def chown ( self, path, uid, gid ):
+        print '*** chown', path, uid, gid
+        return -errno.ENOSYS
+
+    def link ( self, targetPath, linkPath ):
+        print '*** link', targetPath, linkPath
+        return -errno.ENOSYS
+
+    def mkdir ( self, path, mode ):
+        print '*** mkdir', path, oct(mode)
+        return -errno.ENOSYS
+
+    def mknod ( self, path, mode, dev ):
+        print '*** mknod', path, oct(mode), dev
+        return -errno.ENOSYS
 
     def readlink ( self, path ):
         print '*** readlink', path
