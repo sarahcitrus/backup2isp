@@ -42,16 +42,7 @@ def getParts(path):
         return path.split('/')
     """
     pass
-  
-def filesize ( path ):
-    try:
-      result = os.stat(path)
-      return result.st_size
-    except:
-      return 0
-  
-  
-  
+
 class SteekStat(fuse.Stat):
   def __init__(self):
       self.st_mode = stat.S_IFDIR | 0755
@@ -107,6 +98,7 @@ class SteekFS(Fuse):
 	  if filedetail.name == name:
 	    found=True
 	    st.st_mode = filedetail.type
+	    st.steek_id = filedetail.steek_id
 	    if st.st_mode & stat.S_IFREG:
 	      st.st_nlink = 1
 	      st.st_size = filedetail.size
@@ -114,7 +106,7 @@ class SteekFS(Fuse):
 
 	if found == False:
 	  return -errno.ENOENT
-	    
+	  
 	st.st_atime = filedetail.date
 	st.st_mtime = filedetail.date
 	st.st_ctime = filedetail.date
@@ -128,14 +120,15 @@ class SteekFS(Fuse):
 	else:
 	  files = self.dirCache[path]
 	
-	dirents = [ { 'type' : 'd', 'name' : '.', 'size' : 4096, 'date' : int(time.time()) } , 
-		    { 'type' : 'd', 'name' : '..', 'size' : 4096, 'date' : int(time.time()) } ]
+	dirents = [ { 'type' : 'd', 'name' : '.', 'size' : 4096, 'date' : int(time.time()), 'steek_id' : -1 } , 
+		    { 'type' : 'd', 'name' : '..', 'size' : 4096, 'date' : int(time.time()), 'steek_id' : -1 } ]
 	dirents.extend(files)
 	
 	for r in dirents:
 	  entry = fuse.Direntry(r['name'])
 	  entry.size = r['size']
 	  entry.date = r['date']
+	  entry.steek_id = r['steek_id']
 	  if r['type'] == 'd':
 	    entry.type = ( stat.S_IFDIR | 0755 )
 	  elif r['type'] == 'f':
@@ -176,44 +169,11 @@ class SteekFS(Fuse):
 	  return -errno.ENOENT
 
     def read ( self, path, length, offset ):
-	localpath="/tmp/steekcache/" + backup + "/"
-	logging.debug("read %s" % (localpath) )
-	localpath = os.path.join(localpath, path.strip('/'))
-	logging.debug("read %s - %i - %i - %s" % (path, length, offset, localpath) )
-	try:
-	  os.makedirs(os.path.dirname(localpath))
-	except:
-	  pass
-      
-	if os.fork():
-	  # wait for data requested to be available
-	  cyclessincechange=0
-	  timeout=10
-	  oldsize=0
-	  newsize=filesize( localpath )
-	  filedetails = self.getattr(path)
-	  
-	  while newsize < length+offset and newsize < filedetails.st_size:
-	    time.sleep(0.1)
-	    oldsize=newsize
-	    newsize=filesize( localpath )
-	    if oldsize==newsize:
-	      cyclessincechange+=1
-	    else:
-	      cyclessincechange=0
-	      
-	    if cyclessincechange == timeout:
-	      # something broke
-	      return -errno.EIO 
+	result = self.getattr(path)
+	if type(result) != SteekStat:
+	  return -errno.ENOENT
 	else:
-	  # fetch file
-	  if not os.path.exists(localpath):
-	    self.provider.getFileToPath(path, localpath)
-	  sys.exit(0)
-      
-	openfile = open(localpath, 'r')
-	openfile.seek(offset)
-	return openfile.read(length)
+	  return self.provider.readFileById(result.steek_id, length, offset)
 
     def readlink ( self, path ):
         print '*** readlink', path
@@ -272,4 +232,4 @@ if __name__ == '__main__':
     #print fs.getattr('/')
     #for item in fs.readdir('/', 0):
     #  print item.name, item.size, item.type, item.date
-    fs.main()
+    #fs.main()

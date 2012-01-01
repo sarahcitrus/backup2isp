@@ -80,6 +80,9 @@ class Steek:
     
     return self.token, self.tokenexpiry
   
+  def readFileById ( self, id, length, offset ):
+    return 'test'
+  
   def getFileToPath ( self, path, localpath ) :
     self.getToken()
     filename = os.path.basename(path)
@@ -128,6 +131,7 @@ class Steek:
   def parseFile ( self, data ):
     details = data.split('|')
     resultdetail = {}
+    resultdetail['steek_id'] = details[6]
     resultdetail['name'] = details[1]
     resultdetail['type'] = 'd'
     resultdetail['size'] = 4096
