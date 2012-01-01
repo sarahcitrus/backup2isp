@@ -144,8 +144,12 @@ class SteekFS(Fuse):
 	  return data
 
     def truncate ( self, path, size ):
-        logging.debug("%s - %s - %i" % ('truncate', path, size ) )
-        self.write(path,"", 0)
+        if size == 0:
+	  logging.debug("%s - %s - %i" % ('truncate', path, size ) )
+	  return self.write(path,"", 0)
+	else:
+	  logging.debug("UNIMPLEMENTED %s - %s - %i" % ('truncate', path, size ) )
+	  return -errno.ENOSYS
 
     def mknod ( self, path, mode, dev ):
 	logging.debug("%s - %s - %s - %s" % ('mknod', path, oct(mode), dev ) )
