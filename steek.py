@@ -136,9 +136,14 @@ class Steek:
     extraForms = [commandform, initform, option1, option10, option2, option3, option4, option5, option6, option7, option8, option9, param1, param2, filedetail ]
     conn, boundary, formdata, headers = self.doTicket("PUT", self.loginFormName, None, extraForms )
     
-    conn.request("POST", "/gate/dungeongate.php", formdata, headers)
-    
     finalstring = "\r\n------------------------------" + boundary + "--"
+    conn.putrequest("POST", "/gate/dungeongate.php")
+    headers["Content-Length"] = len( formdata ) + len(buf) + len(finalstring);
+    for item in headers.keys():
+      conn.putheader( item, headers[item] )
+    conn.endheaders()
+    conn.send(formdata)
+    
     
     if len(buf) > 0:
       conn.send( buf )
@@ -270,7 +275,10 @@ class Steek:
     if extraForms != None:
       for form in extraForms:
 	forms.append(form)
-    contenttype, formdata, boundary = self.getFormData( forms )
+    final = True
+    if command == "PUT":
+      final = False
+    contenttype, formdata, boundary = self.getFormData( forms, final )
     
     #logging.debug(command + ' ' + formdata)
     
