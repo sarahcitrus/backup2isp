@@ -36,8 +36,13 @@ class Steek:
     self.config.save()
     
     self.token = False
-    meta = self.generateMeta( "sso_mode", { 'sso_mode' : self.provider } , 
-		"login", { 'login' : username, 'password' : password } ) + "#"
+    if backup == None:
+      meta = self.generateMeta( "sso_mode", { 'sso_mode' : self.provider } , 
+		  "login", { 'login' : username, 'password' : password } ) + "#"
+    else:
+      meta = self.generateMeta( "sso_mode", { 'sso_mode' : self.provider } , 
+		  "login", { 'login' : username, 'password' : password, 'backup_name' : backup } ) + "#"
+		  
     status, results = self.doTicket( "LOGIN_BY_SSO", self.loginFormName, meta )
     if status == "META":
       self.token = results[0]["session"]
