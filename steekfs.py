@@ -118,8 +118,12 @@ class SteekFS(Fuse):
 	dirents = [ { 'type' : 'd', 'name' : '.', 'size' : 4096, 'date' : int(time.time()), 'steek_id' : -1 } , 
 		    { 'type' : 'd', 'name' : '..', 'size' : 4096, 'date' : int(time.time()), 'steek_id' : -1 } ]
 	dirents.extend(files)
-	
+	count=0
 	for r in dirents:
+	  if count < offset:
+	    count+=1
+	    continue
+	  count+=1
 	  entry = fuse.Direntry(r['name'])
 	  entry.size = r['size']
 	  entry.date = r['date']
@@ -153,8 +157,12 @@ class SteekFS(Fuse):
 	  return -errno.ENOSYS
 
     def mknod ( self, path, mode, dev ):
-	logging.debug("%s - %s - %s - %s" % ('mknod', path, oct(mode), dev ) )
-        return self.write(path, '', 0)
+	if dev == 0:
+	  logging.debug("%s - %s - %s - %s" % ('mknod', path, oct(mode), dev ) )
+	  return self.write(path, '', 0)
+	else:
+	  logging.debug("UNIMPLEMENTED %s - %s - %s - %s" % ('mknod', path, oct(mode), dev ) )
+	  return -errno.ENOSYS
         
     def write ( self, path, buf, offset ):
 	if offset == 0:
@@ -193,7 +201,6 @@ class SteekFS(Fuse):
         
         if maxspace == -1:
 	  maxspace = (1024*1024*1024*1024*1024) # 1pb
-        
         
         blocksize=1048576 # 1mb blocks
         fragment=1
