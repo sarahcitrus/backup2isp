@@ -222,16 +222,16 @@ class SteekFS(Fuse):
 				       filenamelength))
         return result
         
+    def link ( self, targetPath, linkPath ):
+        logging.debug("%s - %s - %s" % ('link', targetPath, linkPath ) )
+        return self.symlink(targetPath, linkPath)
+        
     def chmod ( self, path, mode ):
         logging.debug("UNIMPLEMENTED %s - %s - %s" % ('chmod', path, oct(mode)) )
         return -errno.ENOSYS
 
     def chown ( self, path, uid, gid ):
         logging.debug("UNIMPLEMENTED %s - %s - %i - %i" % ('chown', path, uid, gid) )
-        return -errno.ENOSYS
-
-    def link ( self, targetPath, linkPath ):
-        logging.debug("UNIMPLEMENTED %s - %s - %s" % ('link', targetPath, linkPath ) )
         return -errno.ENOSYS
 
     def mkdir ( self, path, mode ):
