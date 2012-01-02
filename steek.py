@@ -120,6 +120,9 @@ class Steek:
       results[detail[0]] = detail[1]
     return int(results["SPACE_MAX"]), int(results["SPACE_USED"])
   
+  def makeDir ( self, path ):
+    return self.writeToPath( os.path.join(path,'.keep'), "", 0 )
+  
   def writeToPath ( self, path, buf, offset ) :
     self.getToken()
     contenttypetext = "text/plain"
@@ -148,7 +151,7 @@ class Steek:
     filedetail = { 'name': 'file', 'data' : "Content-Type: " + contenttypetext + "\r\n\r\n", 'filename' : filename }
     extraForms = [commandform, initform, option1, option10, option2, option3, option4, option5, option6, option7, option8, option9, param1, param2, filedetail ]
     conn, boundary, formdata, headers = self.doTicket("PUT", self.loginFormName, None, extraForms )
-    
+    #conn.set_debuglevel(9)
     finalstring = "\r\n------------------------------" + boundary + "--"
     conn.putrequest("POST", "/gate/dungeongate.php")
     headers["Content-Length"] = len( formdata ) + len(buf) + len(finalstring);
