@@ -688,9 +688,10 @@ if __name__ == '__main__':
       sys.exit(1)
       
     if args[0] == "rawcommand":
-      if 2 in args and args[2] == "1":
+      if len(args) > 2 and args[2] == "1":
 	print doTicket(args[1], None, True)
       else:
+	print "here2"
 	print doTicket(args[1], None, False)
       sys.exit(0)
       
