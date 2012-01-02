@@ -228,7 +228,9 @@ class SteekFS(Fuse):
         
     def mkdir ( self, path, mode ):
         logging.debug("%s - %s - %s" % ('mkdir', path, oct(mode) ) )
-        return self.provider.makeDir(path)
+	result = self.provider.makeDir(path)
+	self.invalidateDirCache(path)
+	return result
         
     def chmod ( self, path, mode ):
         logging.debug("UNIMPLEMENTED %s - %s - %s" % ('chmod', path, oct(mode)) )
