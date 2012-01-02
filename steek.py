@@ -112,6 +112,14 @@ class Steek:
     
     return self.doTicket("DELETE", self.loginFormName, self.generateMetaList( { "ids" : ( id, ), "types" : (type,) } ) )
   
+  def statfs( self ):
+    info = self.doTicket("INFO",  self.loginFormName)
+    results = {}
+    for item in info.split('|'):
+      detail = item.split('=')
+      results[detail[0]] = detail[1]
+    return int(results["SPACE_MAX"]), int(results["SPACE_USED"])
+  
   def writeToPath ( self, path, buf, offset ) :
     self.getToken()
     contenttypetext = "text/plain"
@@ -253,7 +261,7 @@ class Steek:
     if command in [ "LSMYBACKUPS", "ADDBACKUP", "REMOVEBACKUP", "VIEWCONFIGURATION", "LICENSEINFO", "LOGIN_BY_SSO" ]:
       commandid = "\b"
     
-    if command in [ "DELETE" ]:
+    if command in [ "DELETE", "INFO" ]:
       commandid = "\x06"
       
     if command in [ "LIST", "GET", "PUT" ]:
@@ -303,7 +311,7 @@ class Steek:
     
     data = response.read()
     connection.close()
-    if command not in [ "LIST", "GET" ]:
+    if command not in [ "LIST", "GET", "INFO" ]:
       return self.parseMeta(data)
     else:
       return data

@@ -1,5 +1,5 @@
 #!/usr/bin/python
-import fuse, sys, logging, logging.handlers
+import fuse, sys, logging, logging.handlers, posix
 fuse.fuse_python_api = (0, 2)
 from fuse import Fuse
 from config import Config
@@ -187,6 +187,34 @@ class SteekFS(Fuse):
 	# cant implement, dont have a local write cache
         pass
 
+    def statfs ( self ):
+        logging.debug("%s" % ('statfs' ) )
+        maxspace, spaceused = self.provider.statfs()
+        
+        if maxspace == -1:
+	  maxspace = (1024*1024*1024*1024*1024) # 1pb
+        
+        
+        blocksize=1048576 # 1mb blocks
+        fragment=1
+        blockstotal=maxspace/blocksize
+        blocksfree=blockstotal-(spaceused/blocksize)
+        nodestotal=blockstotal
+        nodesfree=blocksfree
+        flag=1024
+        filenamelength=255
+        result = posix.statvfs_result((blocksize,
+				       fragment,
+				       blockstotal,
+				       blocksfree,
+				       blocksfree,
+				       nodestotal,
+				       nodesfree,
+				       nodesfree,
+				       flag,
+				       filenamelength))
+        return result
+        
     def chmod ( self, path, mode ):
         logging.debug("UNIMPLEMENTED %s - %s - %s" % ('chmod', path, oct(mode)) )
         return -errno.ENOSYS
@@ -215,10 +243,6 @@ class SteekFS(Fuse):
         logging.debug("UNIMPLEMENTED %s - %s - %s" % ('rename', oldPath, newPath ) )
         return -errno.ENOSYS
 
-    def statfs ( self ):
-        logging.debug("UNIMPLEMENTED %s" % ('statfs' ) )
-        return -errno.ENOSYS
-
     def symlink ( self, targetPath, linkPath ):
         logging.debug("UNIMPLEMENTED %s - %s - %s" % ('symlink', targetPath, linkPath ) )
         return -errno.ENOSYS
@@ -244,4 +268,5 @@ if __name__ == '__main__':
     #print fs.getattr('/')
     #for item in fs.readdir('/', 0):
     #  print item.name, item.size, item.type, item.date
+    #print fs.statfs()
     fs.main()
