@@ -232,6 +232,10 @@ class SteekFS(Fuse):
 	self.invalidateDirCache(path)
 	return result
         
+    def rename ( self, oldPath, newPath ):
+        logging.debug("%s - %s - %s" % ('rename', oldPath, newPath ) )
+        return self.provider.renameFile(oldPath, newPath)
+        
     def chmod ( self, path, mode ):
         logging.debug("UNIMPLEMENTED %s - %s - %s" % ('chmod', path, oct(mode)) )
         return -errno.ENOSYS
@@ -248,9 +252,6 @@ class SteekFS(Fuse):
         logging.debug("UNIMPLEMENTED %s - %s - %i" % ('release', path, flags ) )
         return -errno.ENOSYS
 
-    def rename ( self, oldPath, newPath ):
-        logging.debug("UNIMPLEMENTED %s - %s - %s" % ('rename', oldPath, newPath ) )
-        return -errno.ENOSYS
 
     def symlink ( self, targetPath, linkPath ):
         logging.debug("UNIMPLEMENTED %s - %s - %s" % ('symlink', targetPath, linkPath ) )

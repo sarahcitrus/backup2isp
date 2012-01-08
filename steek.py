@@ -111,6 +111,22 @@ class Steek:
     self.getToken()
     
     return self.doTicket("DELETE", self.loginFormName, self.generateMetaList( { "ids" : ( id, ), "types" : (type,) } ) )
+    
+  def renameFile ( self, oldPath, newPath ):
+    self.getToken()
+    commandform = { 'name': 'command', 'data' : "RENAME" }
+    initform = { 'name': 'init', 'data' : "13000" }
+    option1 = { 'name': 'option1', 'data' : "" }
+    option2 = { 'name': 'option2', 'data' : "" }
+    param1 = { 'name': 'param1', 'data' : oldPath }
+    param2 = { 'name': 'param2', 'data' : newPath }
+    param3 = { 'name': 'param3', 'data' : oldPath }
+    param4 = { 'name': 'param4', 'data' : newPath }
+    
+    extraForms = [commandform, initform, option1, option2, param1, param2]
+    
+    details = self.doTicket("RENAME", self.loginFormName, None, extraForms )
+    print details
   
   def statfs( self ):
     info = self.doTicket("INFO",  self.loginFormName)
@@ -141,13 +157,13 @@ class Steek:
     option2 = { 'name': 'option2', 'data' : time.strftime("%Y-%m-%d %H:%M:%S") } # date
     option3 = { 'name': 'option3', 'data' : "15" }
     option4 = { 'name': 'option4', 'data' : "0" }
-    option5 = { 'name': 'option5', 'data' : "2|#type=1|0|#hidden=1|0|#system=1|0|#readonly=1|0|#permissions=1|0|#;" }
-    option6 = { 'name': 'option6', 'data' : "SHA1:" + sha1 }
-    option7 = { 'name': 'option7', 'data' : "NOT_CRYPTED" }
-    option8 = { 'name': 'option8', 'data' : "0" }
-    option9 = { 'name': 'option9', 'data' : "" }
-    param1 = { 'name': 'param1', 'data' : path }
-    param2 = { 'name': 'param2', 'data' : filename }
+    option5 = { 'name': 'option5', 'data' : "2|#type=1|0|#hidden=1|0|#system=1|0|#readonly=1|0|#permissions=1|0|#;" } # metadata
+    option6 = { 'name': 'option6', 'data' : "SHA1:" + sha1 } # sha of file uploading
+    option7 = { 'name': 'option7', 'data' : "NOT_CRYPTED" } # encryption method
+    option8 = { 'name': 'option8', 'data' : "0" } # something to do with the length of the file , changes a param when listing
+    option9 = { 'name': 'option9', 'data' : "" } # ????
+    param1 = { 'name': 'param1', 'data' : path } # destination dir
+    param2 = { 'name': 'param2', 'data' : filename } # filename
     filedetail = { 'name': 'file', 'data' : "Content-Type: " + contenttypetext + "\r\n\r\n", 'filename' : filename }
     extraForms = [commandform, initform, option1, option10, option2, option3, option4, option5, option6, option7, option8, option9, param1, param2, filedetail ]
     conn, boundary, formdata, headers = self.doTicket("PUT", self.loginFormName, None, extraForms )
@@ -264,7 +280,7 @@ class Steek:
     if command in [ "LSMYBACKUPS", "ADDBACKUP", "REMOVEBACKUP", "VIEWCONFIGURATION", "LICENSEINFO", "LOGIN_BY_SSO" ]:
       commandid = "\b"
     
-    if command in [ "DELETE", "INFO" ]:
+    if command in [ "DELETE", "INFO", "RENAME", "MOVE" ]:
       commandid = "\x06"
       
     if command in [ "LIST", "GET", "PUT" ]:
@@ -314,7 +330,7 @@ class Steek:
     
     data = response.read()
     connection.close()
-    if command not in [ "LIST", "GET", "INFO" ]:
+    if command not in [ "LIST", "GET", "INFO", "RENAME" ]:
       return self.parseMeta(data)
     else:
       return data
