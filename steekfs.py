@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#! /usr/bin/env python2
 import fuse, sys, logging, logging.handlers, posix
 fuse.fuse_python_api = (0, 2)
 from fuse import Fuse
@@ -278,5 +278,4 @@ if __name__ == '__main__':
     #print fs.getattr('/')
     #for item in fs.readdir('/', 0):
     #  print item.name, item.size, item.type, item.date
-    #print fs.statfs()
     fs.main()

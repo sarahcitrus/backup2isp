@@ -1,4 +1,4 @@
-#! /usr/bin/python
+#! /usr/bin/env python2
 import sys, os
 from provider import Provider
 from config import Config

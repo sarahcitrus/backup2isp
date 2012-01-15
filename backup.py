@@ -1,4 +1,4 @@
-#! /usr/bin/python
+#! /usr/bin/env python2
 import httplib, urllib, sys, mimetools,re, os, pickle, time, socket, hashlib, ConfigParser, getopt, mimetypes, datetime, mmap
 
 # setup paths
