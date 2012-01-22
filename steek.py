@@ -160,12 +160,10 @@ class Steek:
     option6 = { 'name': 'option6', 'data' : "SHA1:" + sha1 } # sha of file uploading
     option7 = { 'name': 'option7', 'data' : "NOT_CRYPTED" } # encryption method
     option8 = { 'name': 'option8', 'data' : "0" } # something to do with the length of the file , changes a param when listing
-    option9 = { 'name': 'option9', 'data' : "0" } 
-    option10 = { 'name': 'option10', 'data' : "0" } 
     param1 = { 'name': 'param1', 'data' : path } # destination dir
     param2 = { 'name': 'param2', 'data' : filename } # filename
     filedetail = { 'name': 'file', 'data' : "Content-Type: " + contenttypetext + "\r\n\r\n", 'filename' : filename }
-    extraForms = [commandform, initform, option1, option2, option3, option4, option5, option6, option7, option8, option9, option10,param1, param2, filedetail ]
+    extraForms = [commandform, initform, option1, option2, option3, option4, option5, option6, option7, option8, param1, param2, filedetail ]
     conn, boundary, formdata, headers = self.doTicket("PUT", self.loginFormName, None, extraForms )
     #conn.set_debuglevel(9)
     finalstring = "\r\n------------------------------" + boundary + "--"
