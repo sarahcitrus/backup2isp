@@ -186,10 +186,10 @@ def doTicket( command , param=None, vault=False ):
   commandid = "\x05"
   
   if vault or command in [ "LSMYBACKUPS", "ADDBACKUP", "REMOVEBACKUP", "VIEWCONFIGURATION", "LICENSEINFO" ]:
-    commandid = "\b"
+    commandid = "\x08"
   
   
-  if command in [ "DELETE" ]:
+  if command in [ "DELETE", "GETTIMESTAMP", "LINK_CREATE" ]:
     commandid = "\x06"
     
   if param == None:
