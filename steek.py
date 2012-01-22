@@ -278,7 +278,7 @@ class Steek:
     if command in [ "LSMYBACKUPS", "ADDBACKUP", "REMOVEBACKUP", "VIEWCONFIGURATION", "LICENSEINFO", "LOGIN_BY_SSO" ]:
       commandid = "\x08"
     
-    if command in [ "DELETE", "INFO", "RENAME", "MOVE", "GETTIMESTAMP", "LINK_CREATE" ]:
+    if command in [ "DELETE", "INFO", "RENAME", "MOVE", "GETTIMESTAMP", "LINK_CREATE", "LINK_UPDATE" ]:
       commandid = "\x06"
       
     if command in [ "LIST", "GET", "PUT" ]:

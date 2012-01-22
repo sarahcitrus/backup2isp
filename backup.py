@@ -189,7 +189,7 @@ def doTicket( command , param=None, vault=False ):
     commandid = "\x08"
   
   
-  if command in [ "DELETE", "GETTIMESTAMP", "LINK_CREATE" ]:
+  if command in [ "DELETE", "GETTIMESTAMP", "LINK_CREATE", "LINK_UPDATE" ]:
     commandid = "\x06"
     
   if param == None:
